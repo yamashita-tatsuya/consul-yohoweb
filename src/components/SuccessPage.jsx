@@ -1,21 +1,10 @@
 import { Box, Container, Typography, Button, Paper, Stack, Divider } from '@mui/material'
 import { CheckCircle, Send } from '@mui/icons-material'
 
-const REQUEST_TYPE_LABELS = {
-  bug: 'バグ修正',
-  design: 'デザイン変更',
-  content: 'コンテンツ更新',
-  feature: '機能追加',
-  other: 'その他',
-}
-
-const PRIORITY_LABELS = {
-  high: '高',
-  medium: '中',
-  low: '低',
-}
+const ITEM_NUMS = ['①', '②', '③', '④', '⑤']
 
 export default function SuccessPage({ formData, onReset }) {
+  const items = formData.items || []
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={0} sx={{ p: 4, border: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
@@ -38,13 +27,27 @@ export default function SuccessPage({ formData, onReset }) {
             受付内容
           </Typography>
           <Stack spacing={1} divider={<Divider />}>
-            <Row label="会社名" value={formData.companyName} />
-            <Row label="担当者名" value={formData.contactName} />
+            <Row label="法人名・園名" value={formData.companyName} />
+            <Row label="ご担当者様名" value={formData.contactName} />
             <Row label="返信先" value={formData.email} />
-            <Row label="対象URL" value={formData.siteUrl} />
-            <Row label="修正種別" value={REQUEST_TYPE_LABELS[formData.requestType] ?? formData.requestType} />
-            <Row label="優先度" value={PRIORITY_LABELS[formData.priority] ?? formData.priority} />
+            {formData.desiredDate && <Row label="更新希望日" value={formData.desiredDate} />}
+            {formData.note && <Row label="備考" value={formData.note} />}
           </Stack>
+
+          {items.map((item, idx) => (
+            <Box key={idx} sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="body2" fontWeight={700} sx={{ mb: 1 }}>
+                修正内容{ITEM_NUMS[idx]}
+              </Typography>
+              <Stack spacing={1} divider={<Divider />}>
+                <Row label="対象URL" value={item.siteUrl} />
+                <Row label="内容" value={item.description} />
+                {item.files?.length > 0 && (
+                  <Row label="添付" value={item.files.map((f) => f.name).join(', ')} />
+                )}
+              </Stack>
+            </Box>
+          ))}
         </Paper>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
