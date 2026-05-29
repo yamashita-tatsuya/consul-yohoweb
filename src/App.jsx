@@ -1,31 +1,47 @@
 import { useState } from 'react'
-import { Box, Container, Typography, Paper } from '@mui/material'
+import { Box, Container, Typography } from '@mui/material'
 import Header from './components/Header'
 import RequestForm from './components/RequestForm'
+import ConfirmPage from './components/ConfirmPage'
 import SuccessPage from './components/SuccessPage'
 
 export default function App() {
-  const [submitted, setSubmitted] = useState(false)
-  const [submittedData, setSubmittedData] = useState(null)
+  const [step, setStep] = useState('form')
+  const [formData, setFormData] = useState(null)
 
-  const handleSubmitSuccess = (data) => {
-    setSubmittedData(data)
-    setSubmitted(true)
+  const handleConfirm = (data) => {
+    setFormData(data)
+    setStep('confirm')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleBack = () => {
+    setStep('form')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleSubmitted = (data) => {
+    setFormData(data)
+    setStep('success')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleReset = () => {
-    setSubmitted(false)
-    setSubmittedData(null)
+    setFormData(null)
+    setStep('form')
   }
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       <Header />
 
-      {submitted ? (
-        <SuccessPage formData={submittedData} onReset={handleReset} />
-      ) : (
+      {step === 'success' && <SuccessPage formData={formData} onReset={handleReset} />}
+
+      {step === 'confirm' && (
+        <ConfirmPage formData={formData} onBack={handleBack} onSubmitted={handleSubmitted} />
+      )}
+
+      {step === 'form' && (
         <Container maxWidth="md" sx={{ py: 5, flex: 1 }}>
           {/* ページ説明 */}
           <Box sx={{ mb: 4, textAlign: 'center' }}>
@@ -64,7 +80,7 @@ export default function App() {
             </Typography>
           </Box>
 
-          <RequestForm onSubmitSuccess={handleSubmitSuccess} />
+          <RequestForm onConfirm={handleConfirm} initialData={formData} />
         </Container>
       )}
 

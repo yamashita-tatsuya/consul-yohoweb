@@ -4,13 +4,12 @@ import {
   TextField,
   Button,
   Typography,
-  Alert,
-  CircularProgress,
   Paper,
   Stack,
   Chip,
 } from '@mui/material'
 import { PrimaryButton, SecondaryButton } from './render'
+import AttentionExample from './AttentionExample'
 import { PRIVACY_POLICY_INTRO, PRIVACY_POLICY_SECTIONS } from '../data/privacyPolicy'
 import {
   Send,
@@ -40,13 +39,13 @@ const INITIAL_FORM = {
 
 const createItem = () => ({ siteUrl: '', description: '', files: [] })
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result.split(',')[1])
-    reader.onerror = reject
-  })
+const getMinDesiredDate = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 7)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function SectionTitle({ icon, children }) {
@@ -60,12 +59,17 @@ function SectionTitle({ icon, children }) {
   )
 }
 
-export default function RequestForm({ onSubmitSuccess }) {
-  const [form, setForm] = useState(INITIAL_FORM)
-  const [items, setItems] = useState([createItem()])
+export default function RequestForm({ onConfirm, initialData }) {
+  const [form, setForm] = useState(() => {
+    if (!initialData) return INITIAL_FORM
+    const { items: _items, ...rest } = initialData
+    return { ...INITIAL_FORM, ...rest }
+  })
+  const [items, setItems] = useState(() =>
+    initialData?.items?.length ? initialData.items : [createItem()]
+  )
   const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  const [apiError, setApiError] = useState(null)
+  const [exampleOpen, setExampleOpen] = useState(false)
   const fileInputRef = useRef(null)
   const activeItemIdxRef = useRef(0)
 
@@ -77,6 +81,9 @@ export default function RequestForm({ onSubmitSuccess }) {
       e.email = 'メールアドレスを入力してください'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       e.email = '正しいメールアドレスを入力してください'
+    }
+    if (form.desiredDate && form.desiredDate < getMinDesiredDate()) {
+      e.desiredDate = '本日より1週間後以降の日付をご指定ください'
     }
     const itemErrors = items.map((item) => {
       const ie = {}
@@ -141,7 +148,7 @@ export default function RequestForm({ onSubmitSuccess }) {
     )
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
@@ -149,62 +156,11 @@ export default function RequestForm({ onSubmitSuccess }) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
-
-    setLoading(true)
-    setApiError(null)
-
-    try {
-      const payload = {
-        ...form,
-        items: await Promise.all(
-          items.map(async (it) => ({
-            siteUrl: it.siteUrl,
-            description: it.description,
-            attachments:
-              it.files.length > 0
-                ? await Promise.all(
-                    it.files.map(async (f) => ({
-                      name: f.name,
-                      type: f.type,
-                      data: await fileToBase64(f),
-                    }))
-                  )
-                : [],
-          }))
-        ),
-      }
-
-      const endpoint = import.meta.env.VITE_API_ENDPOINT
-      if (!endpoint) throw new Error('API エンドポイントが設定されていません（.env を確認してください）')
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        const body = await res.text().catch(() => '')
-        throw new Error(`送信エラー (${res.status})${body ? ': ' + body : ''}`)
-      }
-
-      onSubmitSuccess({ ...form, items })
-    } catch (err) {
-      setApiError(err.message || '送信に失敗しました。しばらくたってから再試行してください。')
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } finally {
-      setLoading(false)
-    }
+    onConfirm({ ...form, items })
   }
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
-      {apiError && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setApiError(null)}>
-          {apiError}
-        </Alert>
-      )}
-
       {/* 依頼者情報 */}
       <Paper elevation={0} sx={{ p: { xs: 3, sm: 4.5 }, mb: 3, border: '1px solid', borderColor: 'divider' }}>
         <SectionTitle icon={<Business />}>依頼者情報</SectionTitle>
@@ -278,7 +234,21 @@ export default function RequestForm({ onSubmitSuccess }) {
           <Typography variant="body2" sx={{ mb: 1.5 }}>
             <Box component="span" sx={{ fontWeight: 700 }}>【ご依頼時のお願い】</Box>
             <br />
-            修正内容は、「どのページ（URL）の」「どの部分を」「どのように変更したいか」が分かるよう、具体的にご入力ください。
+            修正箇所・変更内容は、「どのページ（URL）の」「どの部分を」「どのように変更したいか」が分かるよう、具体的にご入力ください。{' '}
+            <Box
+              component="span"
+              onClick={() => setExampleOpen(true)}
+              sx={{
+                color: 'primary.main',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontWeight: 700,
+                fontSize: '0.8125rem',
+                '&:hover': { color: '#41a3a1' },
+              }}
+            >
+              →記載例をみる
+            </Box>
           </Typography>
           <Typography variant="body2">
             <Box component="span" sx={{ fontWeight: 700 }}>【写真差し替え・追加時のお願い】</Box>
@@ -354,11 +324,8 @@ export default function RequestForm({ onSubmitSuccess }) {
 
                   {/* ファイル添付 */}
                   <Box>
-                    <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
                       添付資料（任意）
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                      画像・参考資料など必要がありましたら添付してください。
                     </Typography>
 
                     <Button
@@ -366,10 +333,12 @@ export default function RequestForm({ onSubmitSuccess }) {
                       size="small"
                       startIcon={<AttachFile />}
                       onClick={() => openFilePicker(idx)}
-                      sx={{ mb: 2 }}
                     >
                       ファイルを選択
                     </Button>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 1.5, mb: 1.5, color: 'text.primary' }}>
+                      ※画像・参考資料など必要がありましたら添付してください。
+                    </Typography>
 
                     {item.files.length > 0 && (
                       <Stack direction="row" flexWrap="wrap" gap={1}>
@@ -416,10 +385,13 @@ export default function RequestForm({ onSubmitSuccess }) {
             type="date"
             value={form.desiredDate}
             onChange={handleChange}
+            error={!!errors.desiredDate}
+            helperText={errors.desiredDate}
+            slotProps={{ htmlInput: { min: getMinDesiredDate() } }}
             sx={{ width: { xs: '100%', sm: 240 } }}
           />
           <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>
-            ※本日より1週間後の日付をご指定ください。
+            ※本日より1週間以降の日付をご指定ください。大きな修正など、内容によってご希望日に沿えない場合もございますのでご了承ください。
           </Typography>
         </Box>
 
@@ -485,14 +457,10 @@ export default function RequestForm({ onSubmitSuccess }) {
       </Paper>
 
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <PrimaryButton
-          type="submit"
-          startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
-          disabled={loading}
-        >
-          {loading ? '送信中...' : '送信内容の確認'}
-        </PrimaryButton>
+        <PrimaryButton type="submit">送信内容の確認</PrimaryButton>
       </Box>
+
+      <AttentionExample open={exampleOpen} onClose={() => setExampleOpen(false)} />
     </Box>
   )
 }
