@@ -8,7 +8,7 @@ import {
   Stack,
   Chip,
 } from '@mui/material'
-import { PrimaryButton, SecondaryButton } from './render'
+import { PrimaryButton, SecondaryButton, SectionTitle } from './render'
 import AttentionExample from './AttentionExample'
 import { PRIVACY_POLICY_INTRO, PRIVACY_POLICY_SECTIONS } from '../data/privacyPolicy'
 import {
@@ -46,17 +46,6 @@ const getMinDesiredDate = () => {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
-}
-
-function SectionTitle({ icon, children }) {
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-      <Box sx={{ color: 'primary.main', display: 'flex' }}>{icon}</Box>
-      <Typography variant="subtitle1" fontWeight={900} color="primary.main" sx={{ fontSize: '1.25rem' }}>
-        {children}
-      </Typography>
-    </Box>
-  )
 }
 
 export default function RequestForm({ onConfirm, initialData }) {
@@ -226,13 +215,13 @@ export default function RequestForm({ onConfirm, initialData }) {
           sx={{
             mb: 2.5,
             p: 2,
-            border: '1px solid',
-            borderColor: '#d32f2f',
+            border: '2px solid',
+            borderColor: '#41a3a1',
             borderRadius: 1,
           }}
         >
           <Typography variant="body2" sx={{ mb: 1.5 }}>
-            <Box component="span" sx={{ fontWeight: 700 }}>【ご依頼時のお願い】</Box>
+            <Box component="span" sx={{ fontWeight: 700 }}>● ご依頼時のお願い</Box>
             <br />
             修正箇所・変更内容は、「どのページ（URL）の」「どの部分を」「どのように変更したいか」が分かるよう、具体的にご入力ください。{' '}
             <Box
@@ -251,7 +240,7 @@ export default function RequestForm({ onConfirm, initialData }) {
             </Box>
           </Typography>
           <Typography variant="body2">
-            <Box component="span" sx={{ fontWeight: 700 }}>【写真差し替え・追加時のお願い】</Box>
+            <Box component="span" sx={{ fontWeight: 700 }}>● 写真差し替え・追加時のお願い</Box>
             <br />
             写真の差し替え・追加をご希望の場合は、掲載許可をご確認いただいたうえで、お写真をご提供ください。なお、掲載可否の確認は事前にお願いいたします。
           </Typography>

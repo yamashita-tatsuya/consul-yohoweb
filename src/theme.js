@@ -21,6 +21,8 @@ const theme = createTheme({
   typography: {
     fontFamily:
       '"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", "Yu Gothic", sans-serif',
+    body1: { lineHeight: 1.65 },
+    body2: { lineHeight: 1.6 },
     h4: { fontWeight: 700 },
     h5: { fontWeight: 700 },
     h6: { fontWeight: 600 },
