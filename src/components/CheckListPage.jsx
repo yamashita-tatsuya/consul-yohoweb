@@ -16,9 +16,9 @@ const PAGE_META = {
     icon: <CampaignIcon />,
     step: 3,
     route: '/checklist/sns',
-    nextLabel: '診断結果を確認',
+    nextLabel: '診断結果を確認する',
     nextColor: '#f7894b',
-    nextHoverColor: '#e0773b',
+    nextHoverColor: '#41a3a1',
   },
 }
 
