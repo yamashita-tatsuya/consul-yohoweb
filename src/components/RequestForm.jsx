@@ -10,6 +10,7 @@ import {
 } from '@mui/material'
 import { PrimaryButton, SecondaryButton, SectionTitle } from './render'
 import AttentionExample from './AttentionExample'
+import AttachmentNote from './AttachmentNote'
 import { PRIVACY_POLICY_INTRO, PRIVACY_POLICY_SECTIONS } from '../data/privacyPolicy'
 import {
   Send,
@@ -27,6 +28,7 @@ import {
 
 const MAX_ITEMS = 5
 const ITEM_NUMS = ['①', '②', '③', '④', '⑤']
+const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB
 
 const INITIAL_FORM = {
   companyName: '',
@@ -59,6 +61,8 @@ export default function RequestForm({ onConfirm, initialData }) {
   )
   const [errors, setErrors] = useState({})
   const [exampleOpen, setExampleOpen] = useState(false)
+  const [attachmentNoteOpen, setAttachmentNoteOpen] = useState(false)
+  const [fileErrors, setFileErrors] = useState({})
   const fileInputRef = useRef(null)
   const activeItemIdxRef = useRef(0)
 
@@ -113,6 +117,15 @@ export default function RequestForm({ onConfirm, initialData }) {
       const nextItems = prev.items.filter((_, i) => i !== idx)
       return { ...prev, items: nextItems }
     })
+    setFileErrors((prev) => {
+      const next = {}
+      Object.keys(prev).forEach((k) => {
+        const i = Number(k)
+        if (i < idx) next[i] = prev[k]
+        else if (i > idx) next[i - 1] = prev[k]
+      })
+      return next
+    })
   }
 
   const openFilePicker = (idx) => {
@@ -121,11 +134,24 @@ export default function RequestForm({ onConfirm, initialData }) {
   }
 
   const handleFileAdd = (e) => {
-    const added = Array.from(e.target.files)
+    const selected = Array.from(e.target.files)
     const idx = activeItemIdxRef.current
-    setItems((prev) =>
-      prev.map((it, i) => (i === idx ? { ...it, files: [...it.files, ...added] } : it))
-    )
+    const accepted = selected.filter((f) => f.size <= MAX_FILE_SIZE)
+    const rejected = selected.filter((f) => f.size > MAX_FILE_SIZE)
+    if (accepted.length > 0) {
+      setItems((prev) =>
+        prev.map((it, i) => (i === idx ? { ...it, files: [...it.files, ...accepted] } : it))
+      )
+    }
+    setFileErrors((prev) => ({
+      ...prev,
+      [idx]:
+        rejected.length > 0
+          ? `1ファイルあたり1GBまでです。次のファイルは添付できません：${rejected
+              .map((f) => f.name)
+              .join('、')}`
+          : '',
+    }))
     e.target.value = ''
   }
 
@@ -242,7 +268,21 @@ export default function RequestForm({ onConfirm, initialData }) {
           <Typography variant="body2">
             <Box component="span" sx={{ fontWeight: 700 }}>● 写真差し替え・追加時のお願い</Box>
             <br />
-            写真の差し替え・追加をご希望の場合は、掲載許可をご確認いただいたうえで、お写真をご提供ください。なお、掲載可否の確認は事前にお願いいたします。
+            写真の差し替え・追加をご希望の場合は、掲載許可をご確認いただいたうえで、お写真をご提供ください。なお、掲載可否の確認は事前にお願いいたします。{' '}
+            <Box
+              component="span"
+              onClick={() => setAttachmentNoteOpen(true)}
+              sx={{
+                color: 'primary.main',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontWeight: 700,
+                fontSize: '0.8125rem',
+                '&:hover': { color: '#41a3a1' },
+              }}
+            >
+              →ファイル添付がうまくいかない場合
+            </Box>
           </Typography>
         </Box>
 
@@ -328,6 +368,12 @@ export default function RequestForm({ onConfirm, initialData }) {
                     <Typography variant="caption" sx={{ display: 'block', mt: 1.5, mb: 1.5, color: 'text.primary' }}>
                       ※画像・参考資料など必要がありましたら添付してください。
                     </Typography>
+
+                    {fileErrors[idx] && (
+                      <Typography variant="caption" sx={{ display: 'block', mb: 1.5, color: '#d32f2f', fontWeight: 700 }}>
+                        {fileErrors[idx]}
+                      </Typography>
+                    )}
 
                     {item.files.length > 0 && (
                       <Stack direction="row" flexWrap="wrap" gap={1}>
@@ -450,6 +496,7 @@ export default function RequestForm({ onConfirm, initialData }) {
       </Box>
 
       <AttentionExample open={exampleOpen} onClose={() => setExampleOpen(false)} />
+      <AttachmentNote open={attachmentNoteOpen} onClose={() => setAttachmentNoteOpen(false)} />
     </Box>
   )
 }
