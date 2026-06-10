@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Box, Typography } from '@mui/material'
 import Header from './components/Header'
 import RequestFormPage from './pages/RequestFormPage'
@@ -7,6 +8,15 @@ import CheckListResult from './pages/CheckListResult'
 import { CheckListProvider } from './contexts/CheckListContext'
 
 export default function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    const title = location.pathname.startsWith('/web-check')
+      ? 'WEB集客チェックリスト'
+      : 'サイト修正依頼フォーム'
+    document.title = title
+  }, [location.pathname])
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       <Header />
