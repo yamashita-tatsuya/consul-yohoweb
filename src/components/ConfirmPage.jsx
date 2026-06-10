@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Container,
@@ -10,6 +10,7 @@ import {
   Button,
   CircularProgress,
 } from '@mui/material'
+import { InsertDriveFile } from '@mui/icons-material'
 import { PrimaryButton } from './render'
 
 const ITEM_NUMS = ['①', '②', '③', '④', '⑤']
@@ -118,9 +119,7 @@ export default function ConfirmPage({ formData, onBack, onSubmitted }) {
             <Stack spacing={1} divider={<Divider />}>
               <Row label="対象ページのURL" value={item.siteUrl} />
               <Row label="修正箇所・変更内容" value={item.description} />
-              {item.files?.length > 0 && (
-                <Row label="添付資料" value={item.files.map((f) => f.name).join(', ')} />
-              )}
+              {item.files?.length > 0 && <AttachmentRow files={item.files} />}
             </Stack>
           </Box>
         ))}
@@ -162,6 +161,78 @@ function Row({ label, value }) {
       <Typography variant="body2" fontWeight={500} sx={{ wordBreak: 'break-all', whiteSpace: 'pre-wrap', flex: 1 }}>
         {value}
       </Typography>
+    </Box>
+  )
+}
+
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|svg)$/i
+
+const isImageFile = (f) => f.type?.startsWith('image/') || IMAGE_EXT_RE.test(f.name)
+
+function AttachmentRow({ files }) {
+  // 画像ファイルはサムネイル用のプレビューURLを生成。
+  // StrictModeのeffect二重実行に対応するため、URL生成・破棄はeffect内で完結させる。
+  const [urls, setUrls] = useState({})
+
+  useEffect(() => {
+    const created = {}
+    files.forEach((f, i) => {
+      if (isImageFile(f)) created[i] = URL.createObjectURL(f)
+    })
+    setUrls(created)
+    return () => {
+      Object.values(created).forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [files])
+
+  return (
+    <Box sx={{ display: 'flex', gap: 2, py: 0.5 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+        添付資料
+      </Typography>
+      <Stack spacing={1} sx={{ flex: 1 }}>
+        {files.map((f, i) => (
+          <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {urls[i] ? (
+              <Box
+                component="img"
+                src={urls[i]}
+                alt={f.name}
+                sx={{
+                  width: 56,
+                  height: 56,
+                  objectFit: 'cover',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'grey.300',
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'grey.300',
+                  bgcolor: 'grey.100',
+                  color: 'text.secondary',
+                  flexShrink: 0,
+                }}
+              >
+                <InsertDriveFile fontSize="small" />
+              </Box>
+            )}
+            <Typography variant="body2" fontWeight={500} sx={{ wordBreak: 'break-all' }}>
+              {f.name}
+            </Typography>
+          </Box>
+        ))}
+      </Stack>
     </Box>
   )
 }

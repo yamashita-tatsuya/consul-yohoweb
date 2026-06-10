@@ -15,7 +15,7 @@ const BAD_EXAMPLES = [
 export default function AttentionExample({ open, onClose }) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>修正箇所・変更内容の例</DialogTitle>
+      <DialogTitle>修正箇所・変更内容の記載例</DialogTitle>
       <DialogContent dividers>
         <Typography fontWeight={700} sx={{ mb: 1 }}>
           〇良い例：

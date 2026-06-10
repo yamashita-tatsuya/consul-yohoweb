@@ -12,6 +12,7 @@ import { PrimaryButton, SecondaryButton, SectionTitle } from './render'
 import AttentionExample from './AttentionExample'
 import AttachmentNote from './AttachmentNote'
 import { PRIVACY_POLICY_INTRO, PRIVACY_POLICY_SECTIONS } from '../data/privacyPolicy'
+import { isValidEmail } from '../utils/validation'
 import {
   Send,
   AttachFile,
@@ -72,7 +73,7 @@ export default function RequestForm({ onConfirm, initialData }) {
     if (!form.contactName.trim()) e.contactName = 'ご担当者様名を入力してください'
     if (!form.email.trim()) {
       e.email = 'メールアドレスを入力してください'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    } else if (!isValidEmail(form.email)) {
       e.email = '正しいメールアドレスを入力してください'
     }
     if (form.desiredDate && form.desiredDate < getMinDesiredDate()) {
@@ -281,7 +282,7 @@ export default function RequestForm({ onConfirm, initialData }) {
                 '&:hover': { color: '#41a3a1' },
               }}
             >
-              →ファイル添付がうまくいかない場合
+              →ファイル添付について
             </Box>
           </Typography>
         </Box>

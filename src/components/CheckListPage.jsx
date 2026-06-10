@@ -17,8 +17,7 @@ const PAGE_META = {
     step: 3,
     route: '/web-check/sns',
     nextLabel: '診断結果を確認する',
-    nextColor: '#f7894b',
-    nextHoverColor: '#41a3a1',
+    nextVariant: 'orange',
   },
 }
 
@@ -45,8 +44,7 @@ export default function CheckListPage({ pageKey }) {
         prevTo={prevTo}
         nextTo={nextTo}
         nextLabel={meta.nextLabel}
-        nextColor={meta.nextColor}
-        nextHoverColor={meta.nextHoverColor}
+        nextVariant={meta.nextVariant}
       />
     </CheckListLayout>
   )

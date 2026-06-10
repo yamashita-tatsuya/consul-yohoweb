@@ -2,7 +2,7 @@ import { Box, Paper, Typography, Stack, Divider, Switch, FormControlLabel, Butto
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { Link as RouterLink } from 'react-router-dom'
-import { SectionTitle } from './render'
+import { SectionTitle, CtaButton } from './render'
 
 export default function CheckListSection({
   title,
@@ -15,8 +15,7 @@ export default function CheckListSection({
   nextTo,
   prevTo,
   nextLabel = '次の項目へ',
-  nextColor = '#41a3a1',
-  nextHoverColor = '#368a88',
+  nextVariant = 'blue',
 }) {
   return (
     <>
@@ -134,24 +133,14 @@ export default function CheckListSection({
             </Button>
           )}
           {nextTo && (
-            <Button
+            <CtaButton
               component={RouterLink}
               to={nextTo}
-              variant="contained"
-              size="large"
+              color={nextVariant}
               startIcon={<ArrowForwardIcon />}
-              sx={{
-                bgcolor: nextColor,
-                color: '#fff',
-                fontSize: '1.05rem',
-                fontWeight: 700,
-                px: 4,
-                py: 1.5,
-                '&:hover': { bgcolor: nextHoverColor },
-              }}
             >
               {nextLabel}
-            </Button>
+            </CtaButton>
           )}
         </Box>
       )}

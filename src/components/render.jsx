@@ -1,5 +1,9 @@
 import { Box, Button, Typography } from '@mui/material'
 
+// ブランドカラー。塗りつぶしボタンはオレンジ⇔青でホバー時に色が反転する
+export const BRAND_ORANGE = '#f7894b'
+export const BRAND_BLUE = '#41a3a1'
+
 export function PageHeader({ title, description }) {
   return (
     <Box sx={{ mb: 4, textAlign: 'center' }}>
@@ -50,7 +54,7 @@ export function PrimaryButton({ sx, children, ...props }) {
         py: 1.5,
         fontSize: '1.125rem',
         color: '#fff',
-        '&:hover': { bgcolor: '#41a3a1' },
+        '&:hover': { bgcolor: BRAND_BLUE },
         ...sx,
       }}
       {...props}
@@ -70,8 +74,35 @@ export function SecondaryButton({ sx, children, ...props }) {
         py: 1,
         fontSize: '0.875rem',
         color: '#fff',
-        bgcolor: '#41a3a1',
-        '&:hover': { bgcolor: '#f7894b' },
+        bgcolor: BRAND_BLUE,
+        '&:hover': { bgcolor: BRAND_ORANGE },
+        ...sx,
+      }}
+      {...props}
+    >
+      {children}
+    </Button>
+  )
+}
+
+// オレンジ⇔青でホバー時に色が反転する塗りつぶしCTAボタン。
+// color="orange": オレンジ→ホバー青 / color="blue": 青→ホバーオレンジ
+export function CtaButton({ color = 'orange', sx, children, ...props }) {
+  const base = color === 'blue' ? BRAND_BLUE : BRAND_ORANGE
+  const hover = color === 'blue' ? BRAND_ORANGE : BRAND_BLUE
+  return (
+    <Button
+      variant="contained"
+      size="large"
+      sx={{
+        bgcolor: base,
+        color: '#fff',
+        fontSize: '1.05rem',
+        fontWeight: 700,
+        px: 4,
+        py: 1.5,
+        '&:hover': { bgcolor: hover },
+        '&.Mui-disabled': { bgcolor: 'grey.400', color: '#fff' },
         ...sx,
       }}
       {...props}
