@@ -6,16 +6,16 @@ import CheckListSection from './CheckListSection'
 import { useCheckList } from '../contexts/CheckListContext'
 import { CHECK_PAGES, PAGE_ORDER } from '../data/checkListData'
 
-const RESULT_ROUTE = '/checklist/result'
+const RESULT_ROUTE = '/web-check/result'
 
 // 各STEPのアイコン・STEP番号・ルートをここに集約（追加・並び替えはこの1か所で完結）
 const PAGE_META = {
-  web: { icon: <MonitorIcon />, step: 1, route: '/checklist' },
-  google: { icon: <PlaceIcon />, step: 2, route: '/checklist/google' },
+  web: { icon: <MonitorIcon />, step: 1, route: '/web-check' },
+  google: { icon: <PlaceIcon />, step: 2, route: '/web-check/google' },
   sns: {
     icon: <CampaignIcon />,
     step: 3,
-    route: '/checklist/sns',
+    route: '/web-check/sns',
     nextLabel: '診断結果を確認する',
     nextColor: '#f7894b',
     nextHoverColor: '#41a3a1',

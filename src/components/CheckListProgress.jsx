@@ -5,10 +5,10 @@ import { PAGE_ORDER } from '../data/checkListData'
 
 // 現在表示中のページ（何ページ目か）で進捗を表す
 const CURRENT_BY_PATH = {
-  '/checklist': 1,
-  '/checklist/google': 2,
-  '/checklist/sns': 3,
-  '/checklist/result': PAGE_ORDER.length,
+  '/web-check': 1,
+  '/web-check/google': 2,
+  '/web-check/sns': 3,
+  '/web-check/result': PAGE_ORDER.length,
 }
 
 export default function CheckListProgress() {
@@ -22,7 +22,7 @@ export default function CheckListProgress() {
   // 最初のページ（/checklist）はヘッダーから、それ以外は「n/3ページ・進捗バー」の位置から表示する
   const rootRef = useRef(null)
   useEffect(() => {
-    if (pathname === '/checklist') {
+    if (pathname === '/web-check') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })

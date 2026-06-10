@@ -243,7 +243,7 @@ export default function CheckListResult() {
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
         <Button
           component={RouterLink}
-          to="/checklist"
+          to="/web-check"
           onClick={reset}
           variant="outlined"
           size="large"

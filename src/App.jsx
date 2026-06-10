@@ -13,12 +13,12 @@ export default function App() {
 
       <CheckListProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/requestform" replace />} />
-          <Route path="/requestform" element={<RequestFormPage />} />
-          <Route path="/checklist" element={<CheckListPage pageKey="web" />} />
-          <Route path="/checklist/google" element={<CheckListPage pageKey="google" />} />
-          <Route path="/checklist/sns" element={<CheckListPage pageKey="sns" />} />
-          <Route path="/checklist/result" element={<CheckListResult />} />
+          <Route path="/" element={<Navigate to="/update-request" replace />} />
+          <Route path="/update-request" element={<RequestFormPage />} />
+          <Route path="/web-check" element={<CheckListPage pageKey="web" />} />
+          <Route path="/web-check/google" element={<CheckListPage pageKey="google" />} />
+          <Route path="/web-check/sns" element={<CheckListPage pageKey="sns" />} />
+          <Route path="/web-check/result" element={<CheckListResult />} />
         </Routes>
       </CheckListProvider>
 
