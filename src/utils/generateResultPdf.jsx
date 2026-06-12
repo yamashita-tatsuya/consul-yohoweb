@@ -1,5 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Document, Page, Text, View, StyleSheet, Font, pdf } from '@react-pdf/renderer'
+import { Document, Page, Text, View, Image, StyleSheet, Font, pdf } from '@react-pdf/renderer'
+import QRCode from 'qrcode'
+
+// お問い合わせページ（QRコードのリンク先）
+const CONTACT_URL = 'https://yubisui.site/contact/'
 
 // 日本語フォント（Noto Sans JP / 英数字も収録）を登録。
 // public/fonts 配下に同梱しており、PDF生成時にのみ読み込まれる。
@@ -67,6 +71,19 @@ const styles = StyleSheet.create({
   undoneMark: { width: 12, color: RED },
   undoneText: { flex: 1 },
   doneText: { color: GREEN },
+  contactBox: {
+    border: `1pt solid ${TEAL}`,
+    borderRadius: 4,
+    padding: 12,
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  contactText: { flex: 1, paddingRight: 12 },
+  contactTitle: { fontSize: 12, fontWeight: 'bold', color: TEAL, marginBottom: 4 },
+  contactBody: { fontSize: 9, color: GREY },
+  contactUrl: { fontSize: 9, color: TEAL, marginTop: 4 },
+  qrImage: { width: 84, height: 84 },
   footer: {
     position: 'absolute',
     bottom: 20,
@@ -79,7 +96,7 @@ const styles = StyleSheet.create({
 })
 
 function ResultDocument({ data }) {
-  const { companyName, email, date, overall, advice, pages } = data
+  const { companyName, email, date, overall, advice, pages, qrDataUrl } = data
   return (
     <Document title="WEB集客診断結果" author="株式会社ゆびすいコンサルティング">
       <Page size="A4" style={styles.page}>
@@ -95,7 +112,7 @@ function ResultDocument({ data }) {
             <Text style={styles.metaValue}>{email}</Text>
           </View>
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>発行日</Text>
+            <Text style={styles.metaLabel}>診断日</Text>
             <Text style={styles.metaValue}>{date}</Text>
           </View>
         </View>
@@ -138,6 +155,21 @@ function ResultDocument({ data }) {
           </View>
         ))}
 
+        {qrDataUrl && (
+          <View style={styles.contactBox} wrap={false}>
+            <View style={styles.contactText}>
+              <Text style={styles.contactTitle}>WEB集客のご相談・お問い合わせ（無料）</Text>
+              <Text style={styles.contactBody}>
+                WEBサイト制作・改修／Googleマップ整備／SNS導線設計など、園児募集に{'\n'}
+                向けた改善はゆびすいにご相談ください。{'\n'}
+                ※QRコードよりお問い合わせいただけます。
+              </Text>
+              <Text style={styles.contactUrl}>{CONTACT_URL}</Text>
+            </View>
+            <Image style={styles.qrImage} src={qrDataUrl} />
+          </View>
+        )}
+
         <Text style={styles.footer} fixed>
           © {new Date().getFullYear()} 株式会社ゆびすいコンサルティング
         </Text>
@@ -147,5 +179,7 @@ function ResultDocument({ data }) {
 }
 
 export async function generateResultPdfBlob(data) {
-  return pdf(<ResultDocument data={data} />).toBlob()
+  // 固定URLからQRコード（PNG dataURL）を生成して埋め込む
+  const qrDataUrl = await QRCode.toDataURL(CONTACT_URL, { margin: 1, width: 240 })
+  return pdf(<ResultDocument data={{ ...data, qrDataUrl }} />).toBlob()
 }
