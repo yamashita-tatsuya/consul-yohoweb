@@ -418,7 +418,14 @@ export default function CheckListResult() {
           貴園のホームページ・Googleビジネスプロフィール・SNS導線を拝見し、<br />
           秋の募集前に優先して見直すべき点を簡易レポートでご案内します。
         </Typography>
-        <CtaButton color="blue" sx={{ width: { xs: '100%', sm: 340 }, px: 0 }}>
+        <CtaButton
+          color="blue"
+          component="a"
+          href="https://yubisui.site/contact/"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ width: { xs: '100%', sm: 340 }, px: 0 }}
+        >
           → ゆびすいに無料相談
         </CtaButton>
         <Typography variant="subtitle1" sx={{ color: '#41a3a1', fontSize: '1.35rem', mt: 2 }}>

@@ -28,25 +28,28 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSansJP',
     fontSize: 10,
     color: '#2f2725',
-    paddingVertical: 36,
+    paddingTop: 24,
+    paddingBottom: 36,
     paddingHorizontal: 40,
     lineHeight: 1.5,
   },
-  title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: TEAL },
-  metaBox: { marginTop: 14, marginBottom: 16 },
+  headerDate: { textAlign: 'right', fontSize: 9, color: GREY, marginBottom: 4 },
+  title: { fontSize: 23, fontWeight: 'bold', textAlign: 'center', color: TEAL },
+  metaBox: { marginTop: 26, marginBottom: 16 },
   metaRow: { flexDirection: 'row', marginBottom: 2 },
   metaLabel: { width: 90, color: GREY },
   metaValue: { flex: 1 },
   overallBox: {
-    border: `1pt solid ${TEAL}`,
-    borderRadius: 4,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: TEAL,
     padding: 12,
     marginBottom: 18,
     alignItems: 'center',
   },
   overallScore: { fontSize: 16, fontWeight: 'bold' },
-  adviceTitle: { fontSize: 13, fontWeight: 'bold', marginTop: 4 },
-  adviceBody: { fontSize: 10, color: GREY, textAlign: 'center', marginTop: 2 },
+  adviceTitle: { fontSize: 13, fontWeight: 'bold', marginTop: 10 },
+  adviceBody: { fontSize: 9, color: GREY, textAlign: 'center', marginTop: 8 },
   section: { marginBottom: 14 },
   sectionHeader: {
     flexDirection: 'row',
@@ -100,6 +103,7 @@ function ResultDocument({ data }) {
   return (
     <Document title="WEB集客診断結果" author="株式会社ゆびすいコンサルティング">
       <Page size="A4" style={styles.page}>
+        <Text style={styles.headerDate}>診断日：{date}</Text>
         <Text style={styles.title}>WEB集客診断結果</Text>
 
         <View style={styles.metaBox}>
@@ -111,13 +115,9 @@ function ResultDocument({ data }) {
             <Text style={styles.metaLabel}>メールアドレス</Text>
             <Text style={styles.metaValue}>{email}</Text>
           </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>診断日</Text>
-            <Text style={styles.metaValue}>{date}</Text>
-          </View>
         </View>
 
-        <View style={styles.overallBox}>
+        <View style={[styles.overallBox, { borderColor: overall.color }]}>
           <Text style={styles.overallScore}>
             総合スコア {overall.done} / {overall.total} 項目（{overall.pct}%）
           </Text>
