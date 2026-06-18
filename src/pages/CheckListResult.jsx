@@ -352,7 +352,7 @@ export default function CheckListResult() {
                 '& .MuiTypography-root': { fontSize: '0.8125rem' },
               }}
             >
-              <Typography variant="body2" sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
                 {PRIVACY_POLICY_INTRO}
               </Typography>
               {PRIVACY_POLICY_SECTIONS.map((section, i) => (

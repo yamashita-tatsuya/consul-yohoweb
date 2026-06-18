@@ -45,8 +45,6 @@ export default function RequestFormPage() {
         </Typography>
         <Typography color="text.secondary">
           ホームページの修正・更新依頼を受け付けております。必要事項をご入力のうえ送信してください。
-          <br />
-          内容を確認次第、担当者よりご連絡いたします。
         </Typography>
       </Box>
 

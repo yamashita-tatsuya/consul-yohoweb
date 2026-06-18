@@ -10,8 +10,7 @@ import {
 } from '@mui/material'
 import { PrimaryButton, SecondaryButton, SectionTitle } from './render'
 import AttentionExample from './AttentionExample'
-import AttachmentNote from './AttachmentNote'
-import { PRIVACY_POLICY_INTRO, PRIVACY_POLICY_SECTIONS } from '../data/privacyPolicy'
+import { REQUEST_PRIVACY_NOTICE } from '../data/privacyPolicy'
 import { isValidEmail } from '../utils/validation'
 import {
   Send,
@@ -62,7 +61,6 @@ export default function RequestForm({ onConfirm, initialData }) {
   )
   const [errors, setErrors] = useState({})
   const [exampleOpen, setExampleOpen] = useState(false)
-  const [attachmentNoteOpen, setAttachmentNoteOpen] = useState(false)
   const [fileErrors, setFileErrors] = useState({})
   const fileInputRef = useRef(null)
   const activeItemIdxRef = useRef(0)
@@ -265,25 +263,15 @@ export default function RequestForm({ onConfirm, initialData }) {
             >
               →記載例をみる
             </Box>
+            <br />
+            ページを跨ぐ場合は、「＋修正内容を追加」ボタンより、別修正としてご入力ください。
           </Typography>
           <Typography variant="body2">
             <Box component="span" sx={{ fontWeight: 700 }}>● 写真差し替え・追加時のお願い</Box>
             <br />
-            写真の差し替え・追加をご希望の場合は、掲載許可をご確認いただいたうえで、お写真をご提供ください。なお、掲載可否の確認は事前にお願いいたします。{' '}
-            <Box
-              component="span"
-              onClick={() => setAttachmentNoteOpen(true)}
-              sx={{
-                color: 'primary.main',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                fontWeight: 700,
-                fontSize: '0.8125rem',
-                '&:hover': { color: '#41a3a1' },
-              }}
-            >
-              →ファイル添付について
-            </Box>
+            写真の差し替え・追加をご希望の場合は、掲載許可をご確認いただいたうえで、お写真をご提供ください。なお、掲載可否の確認は事前にお客様自身でお願いいたします。
+            <br />
+            ※1GBを超えるファイルを添付したい場合は、こちらで添付せずに備考欄にその旨をご記載ください。別途、共有方法についてご案内いたします。
           </Typography>
         </Box>
 
@@ -368,6 +356,9 @@ export default function RequestForm({ onConfirm, initialData }) {
                     </Button>
                     <Typography variant="caption" sx={{ display: 'block', mt: 1.5, mb: 1.5, color: 'text.primary' }}>
                       ※画像・参考資料など必要がありましたら添付してください。
+                      <br />
+                      ※画像が複数枚ある場合は、「＋修正内容を追加」ボタンより修正内容を追加し、それぞれの箇所へ添付いただくか、同ページ内なら複数添付も可能です。
+                      複数添付する場合は、HPのどこの画像か分かるように、内容欄へのご説明やデータのタイトルを変更するなど、分かる形でご共有ください。
                     </Typography>
 
                     {fileErrors[idx] && (
@@ -414,7 +405,7 @@ export default function RequestForm({ onConfirm, initialData }) {
 
         <Box sx={{ mt: 3 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            更新希望日
+            更新希望日（任意）
           </Typography>
           <TextField
             name="desiredDate"
@@ -427,7 +418,12 @@ export default function RequestForm({ onConfirm, initialData }) {
             sx={{ width: { xs: '100%', sm: 240 } }}
           />
           <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>
-            ※本日より1週間以降の日付をご指定ください。大きな修正など、内容によってご希望日に沿えない場合もございますのでご了承ください。
+            ※ご希望がある場合のみご入力ください。ご希望がない場合は、受付日の翌営業日～5営業日程度を目安に更新いたします。
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>
+            ※希望日は本日より1週間以降の日付をご指定ください。大きな修正など、内容によってご希望に沿えない場合もありますのでご了承ください。
+            <br />
+            ※土日、祝日、夏季休業、年末年始は対応できませんのでご了承ください。
           </Typography>
         </Box>
 
@@ -451,8 +447,6 @@ export default function RequestForm({ onConfirm, initialData }) {
         <SectionTitle icon={<Person />}>個人情報の取り扱いについて</SectionTitle>
         <Box
           sx={{
-            maxHeight: 180,
-            overflowY: 'auto',
             p: 2,
             border: '1px solid',
             borderColor: 'grey.400',
@@ -461,28 +455,9 @@ export default function RequestForm({ onConfirm, initialData }) {
             '& .MuiTypography-root': { fontSize: '0.8125rem' },
           }}
         >
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            {PRIVACY_POLICY_INTRO}
+          <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+            {REQUEST_PRIVACY_NOTICE}
           </Typography>
-          {PRIVACY_POLICY_SECTIONS.map((section, i) => (
-            <Box key={i} sx={{ mb: 2 }}>
-              <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
-                {section.heading}
-              </Typography>
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
-                {section.body}
-              </Typography>
-              {section.bullets && (
-                <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 3 }}>
-                  {section.bullets.map((b, bi) => (
-                    <Typography component="li" variant="body2" key={bi}>
-                      {b}
-                    </Typography>
-                  ))}
-                </Box>
-              )}
-            </Box>
-          ))}
         </Box>
 
         <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
@@ -497,7 +472,6 @@ export default function RequestForm({ onConfirm, initialData }) {
       </Box>
 
       <AttentionExample open={exampleOpen} onClose={() => setExampleOpen(false)} />
-      <AttachmentNote open={attachmentNoteOpen} onClose={() => setAttachmentNoteOpen(false)} />
     </Box>
   )
 }
