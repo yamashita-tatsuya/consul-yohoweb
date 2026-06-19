@@ -38,11 +38,13 @@ export default function CheckListSection({
                 overflow: 'hidden',
               }}
             >
-              <Box sx={{ bgcolor: '#41a3a1', color: '#fff', px: 2, py: 1 }}>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  {group.title}
-                </Typography>
-              </Box>
+              {group.title && (
+                <Box sx={{ bgcolor: '#41a3a1', color: '#fff', px: 2, py: 1 }}>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    {group.title}
+                  </Typography>
+                </Box>
+              )}
               <Stack divider={<Divider />}>
                 {group.items.map((item, iIdx) => (
                   <FormControlLabel
@@ -80,7 +82,29 @@ export default function CheckListSection({
                         </Typography>
                       </Box>
                     }
-                    label={<Typography variant="body1">{item}</Typography>}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box
+                          sx={{
+                            flexShrink: 0,
+                            width: 26,
+                            height: 26,
+                            borderRadius: '50%',
+                            bgcolor: isChecked(pageKey, gIdx, iIdx) ? '#41a3a1' : 'grey.300',
+                            color: isChecked(pageKey, gIdx, iIdx) ? '#fff' : 'text.secondary',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.8125rem',
+                            fontWeight: 700,
+                            transition: 'background-color 0.15s, color 0.15s',
+                          }}
+                        >
+                          {iIdx + 1}
+                        </Box>
+                        <Typography variant="body1">{item}</Typography>
+                      </Box>
+                    }
                     labelPlacement="start"
                     sx={{
                       alignItems: 'center',

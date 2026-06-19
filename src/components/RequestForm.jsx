@@ -12,6 +12,14 @@ import { PrimaryButton, SecondaryButton, SectionTitle } from './render'
 import AttentionExample from './AttentionExample'
 import { REQUEST_PRIVACY_NOTICE } from '../data/privacyPolicy'
 import { isValidEmail } from '../utils/validation'
+import { isClosedDate } from '../data/formClosedDates'
+import dayjs from 'dayjs'
+import 'dayjs/locale/ja'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { PickerDay } from '@mui/x-date-pickers/PickerDay'
+import * as holiday_jp from '@holiday-jp/holiday_jp'
 import {
   Send,
   AttachFile,
@@ -50,6 +58,39 @@ const getMinDesiredDate = () => {
   return `${y}-${m}-${day}`
 }
 
+// 土曜=6・日曜=0・祝日・休業日 を判定（dayjs オブジェクトを受け取る）
+const isHolidayDate = (d) => holiday_jp.isHoliday(d.toDate())
+const isDisabledDate = (d) => {
+  const dow = d.day()
+  return dow === 0 || dow === 6 || isHolidayDate(d) || isClosedDate(d)
+}
+
+// カレンダーの日セル：日曜・祝日・休業日=赤、土曜=青で表示（選択不可日も色で識別できるように）
+function ColoredDay(props) {
+  const { day } = props
+  const dow = day.day()
+  const color =
+    dow === 0 || isHolidayDate(day) || isClosedDate(day)
+      ? '#d32f2f'
+      : dow === 6
+        ? '#1565c0'
+        : undefined
+  return (
+    <PickerDay
+      {...props}
+      sx={{
+        ...(color ? { color, '&.Mui-disabled': { color, opacity: 0.5 } } : {}),
+        // 選択時：薄い青の丸＋濃い文字で見やすく
+        '&.Mui-selected': {
+          backgroundColor: '#d9edec',
+          color: '#2f2725',
+          '&:hover, &:focus': { backgroundColor: '#c5e2e0' },
+        },
+      }}
+    />
+  )
+}
+
 export default function RequestForm({ onConfirm, initialData }) {
   const [form, setForm] = useState(() => {
     if (!initialData) return INITIAL_FORM
@@ -74,8 +115,12 @@ export default function RequestForm({ onConfirm, initialData }) {
     } else if (!isValidEmail(form.email)) {
       e.email = '正しいメールアドレスを入力してください'
     }
-    if (form.desiredDate && form.desiredDate < getMinDesiredDate()) {
-      e.desiredDate = '本日より1週間後以降の日付をご指定ください'
+    if (form.desiredDate) {
+      if (form.desiredDate < getMinDesiredDate()) {
+        e.desiredDate = '本日より1週間後以降の日付をご指定ください'
+      } else if (isDisabledDate(dayjs(form.desiredDate))) {
+        e.desiredDate = '土日・祝日・休業日は指定できません'
+      }
     }
     const itemErrors = items.map((item) => {
       const ie = {}
@@ -91,6 +136,12 @@ export default function RequestForm({ onConfirm, initialData }) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
+  }
+
+  const handleDateChange = (value) => {
+    const next = value && value.isValid() ? value.format('YYYY-MM-DD') : ''
+    setForm((prev) => ({ ...prev, desiredDate: next }))
+    if (errors.desiredDate) setErrors((prev) => ({ ...prev, desiredDate: '' }))
   }
 
   const handleItemChange = (idx, e) => {
@@ -248,7 +299,8 @@ export default function RequestForm({ onConfirm, initialData }) {
           <Typography variant="body2" sx={{ mb: 1.5 }}>
             <Box component="span" sx={{ fontWeight: 700 }}>● ご依頼時のお願い</Box>
             <br />
-            修正箇所・変更内容は、「どのページ（URL）の」「どの部分を」「どのように変更したいか」が分かるよう、具体的にご入力ください。{' '}
+            修正箇所・変更内容は、「どのページ（URL）の」「どの部分を」「どのように変更したいか」が分かるよう、具体的にご入力ください。ページを跨ぐ場合は、「＋修正内容を追加」ボタンより、別修正としてご入力ください。
+            <br />
             <Box
               component="span"
               onClick={() => setExampleOpen(true)}
@@ -263,8 +315,6 @@ export default function RequestForm({ onConfirm, initialData }) {
             >
               →記載例をみる
             </Box>
-            <br />
-            ページを跨ぐ場合は、「＋修正内容を追加」ボタンより、別修正としてご入力ください。
           </Typography>
           <Typography variant="body2">
             <Box component="span" sx={{ fontWeight: 700 }}>● 写真差し替え・追加時のお願い</Box>
@@ -407,16 +457,24 @@ export default function RequestForm({ onConfirm, initialData }) {
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             更新希望日（任意）
           </Typography>
-          <TextField
-            name="desiredDate"
-            type="date"
-            value={form.desiredDate}
-            onChange={handleChange}
-            error={!!errors.desiredDate}
-            helperText={errors.desiredDate}
-            slotProps={{ htmlInput: { min: getMinDesiredDate() } }}
-            sx={{ width: { xs: '100%', sm: 240 } }}
-          />
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ja">
+            <DatePicker
+              value={form.desiredDate ? dayjs(form.desiredDate) : null}
+              onChange={handleDateChange}
+              minDate={dayjs(getMinDesiredDate())}
+              shouldDisableDate={isDisabledDate}
+              format="YYYY/MM/DD"
+              slots={{ day: ColoredDay }}
+              slotProps={{
+                textField: {
+                  name: 'desiredDate',
+                  error: !!errors.desiredDate,
+                  helperText: errors.desiredDate,
+                  sx: { width: { xs: '100%', sm: 240 } },
+                },
+              }}
+            />
+          </LocalizationProvider>
           <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>
             ※ご希望がある場合のみご入力ください。ご希望がない場合は、受付日の翌営業日～5営業日程度を目安に更新いたします。
           </Typography>

@@ -65,7 +65,23 @@ export default function RequestFormPage() {
         </Typography>
         <Typography variant="body2">
           お知らせページの投稿、各種資料ページの資料アップロードは、お客様ご自身で更新いただける仕様です。
-          公開時にお渡ししているマニュアルをご確認のうえ、まずはお客様にてご対応をお願いいたします。
+          公開時にお渡ししているマニュアルをご確認のうえ、まずはお客様にてご対応をお願いいたします。{' '}
+          <Box
+            component="a"
+            href="/test_manual.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              fontWeight: 400,
+              fontSize: '0.8125rem',
+              color: '#000000',
+              textDecoration: 'underline',
+              whiteSpace: 'nowrap',
+              '&:hover': { color: '#41a3a1' },
+            }}
+          >
+            →マニュアルはこちら（仮）
+          </Box>
           <br />
           ご不明な点がある場合や、その他の修正について、本フォームよりご依頼ください。
         </Typography>

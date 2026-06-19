@@ -71,7 +71,7 @@ export default function CheckListResult() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'WEB集客診断結果.pdf'
+      a.download = '園のWEB活用診断結果.pdf'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -149,7 +149,7 @@ export default function CheckListResult() {
 
   return (
     <Container maxWidth="md" sx={{ py: 5, flex: 1 }}>
-      <PageHeader title="WEB集客診断結果" description="診断結果に基づいて、改善点を確認しましょう。" />
+      <PageHeader title="園のWEB活用診断結果" description="診断結果に基づいて、改善点を確認しましょう。" />
 
       <Box
         sx={{

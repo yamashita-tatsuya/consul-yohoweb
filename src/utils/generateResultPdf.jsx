@@ -101,10 +101,10 @@ const styles = StyleSheet.create({
 function ResultDocument({ data }) {
   const { companyName, email, date, overall, advice, pages, qrDataUrl } = data
   return (
-    <Document title="WEB集客診断結果" author="株式会社ゆびすいコンサルティング">
+    <Document title="園のWEB活用診断結果" author="株式会社ゆびすいコンサルティング">
       <Page size="A4" style={styles.page}>
         <Text style={styles.headerDate}>診断日：{date}</Text>
-        <Text style={styles.title}>WEB集客診断結果</Text>
+        <Text style={styles.title}>園のWEB活用診断結果</Text>
 
         <View style={styles.metaBox}>
           <View style={styles.metaRow}>

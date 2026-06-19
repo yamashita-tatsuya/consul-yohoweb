@@ -12,7 +12,7 @@ export default function App() {
 
   useEffect(() => {
     const title = location.pathname.startsWith('/web-check')
-      ? 'WEB集客チェックリスト'
+      ? 'WEB活用診断'
       : 'サイト修正依頼フォーム'
     document.title = title
   }, [location.pathname])
