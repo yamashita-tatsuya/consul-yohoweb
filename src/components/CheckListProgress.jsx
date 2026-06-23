@@ -19,15 +19,16 @@ export default function CheckListProgress() {
   const value = total === 0 ? 0 : (current / total) * 100
 
   // ページ切り替え時のスクロール
-  // 最初のページ（/checklist）はヘッダーから、それ以外は「n/3ページ・進捗バー」の位置から表示する
+  // 1ページ目はタイトル（ヘッダー）から、それ以外は「n/3ページ・進捗バー」の位置から表示する
+  // ※ URLの末尾スラッシュ等の揺れに左右されないよう、ページ番号で判定する
   const rootRef = useRef(null)
   useEffect(() => {
-    if (pathname === '/web-check') {
+    if (current === 1) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [pathname])
+  }, [pathname, current])
 
   return (
     <Box ref={rootRef} sx={{ mb: 4, scrollMarginTop: 16 }}>
