@@ -131,6 +131,7 @@ export default function CheckListSection({
           sx={{
             display: 'flex',
             justifyContent: prevTo ? 'space-between' : 'flex-end',
+            gap: 2,
             mt: 1,
             mb: 2,
           }}

@@ -3,12 +3,35 @@ import { Box, Container, Typography, Paper, Stack, Divider, LinearProgress, Circ
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CloseIcon from '@mui/icons-material/Close'
 import ReplayIcon from '@mui/icons-material/Replay'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Link as RouterLink } from 'react-router-dom'
 import { useCheckList } from '../contexts/CheckListContext'
 import { CHECK_PAGES, PAGE_ORDER } from '../data/checkListData'
 import { PRIVACY_POLICY_INTRO, PRIVACY_POLICY_SECTIONS } from '../data/privacyPolicy'
 import { PageHeader, CtaButton } from '../components/render'
 import { isValidEmail } from '../utils/validation'
+
+// 診断結果を kintone に登録する（失敗してもダウンロードは止めず、ログのみ・UIにエラーは出さない）
+async function postResultToKintone(payload) {
+  const endpoint = import.meta.env.VITE_RESULT_API_ENDPOINT
+  if (!endpoint) {
+    console.warn('VITE_RESULT_API_ENDPOINT が未設定のため、診断結果の登録をスキップしました。')
+    return
+  }
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      console.error(`kintone 登録失敗 (${res.status}): ${body}`)
+    }
+  } catch (e) {
+    console.error('kintone 登録失敗:', e)
+  }
+}
 
 export default function CheckListResult() {
   const { isChecked, reset } = useCheckList()
@@ -76,6 +99,18 @@ export default function CheckListResult() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+
+      // ダウンロード成功後、診断結果を kintone に登録（fire-and-forget・失敗はログのみ）
+      // kintone の結果詳細には、対応済み(○)・未対応(×)を含めた全項目を送る
+      postResultToKintone({
+        companyName: pdfData.companyName,
+        email: pdfData.email,
+        score: overallPct,
+        sections: PAGE_ORDER.map((pageKey) => ({
+          title: CHECK_PAGES[pageKey].sectionTitle,
+          items: summarize(pageKey).items.map((x) => ({ text: x.text, checked: x.checked })),
+        })),
+      })
     } catch (err) {
       console.error('PDF generation failed:', err)
       setDlError('PDFの生成に失敗しました。お手数ですが時間をおいて再度お試しください。')
@@ -149,7 +184,7 @@ export default function CheckListResult() {
 
   return (
     <Container maxWidth="md" sx={{ py: 5, flex: 1 }}>
-      <PageHeader title="園のWEB活用診断結果" description="診断結果に基づいて、改善点を確認しましょう。" />
+      <PageHeader title={<>園のWEB活用<br />診断結果</>} description="診断結果に基づいて、改善点を確認しましょう。" />
 
       <Box
         sx={{
@@ -211,70 +246,57 @@ export default function CheckListResult() {
         </Typography>
       </Paper>
 
-      <Stack spacing={3}>
-        {PAGE_ORDER.map((pageKey) => {
-          const page = CHECK_PAGES[pageKey]
-          const { items, total, done } = summarize(pageKey)
-          const pct = total > 0 ? Math.round((done / total) * 100) : 0
-          const undone = items.filter((x) => !x.checked)
+      <Paper
+        elevation={0}
+        sx={{ p: { xs: 3, sm: 4 }, border: '1px solid', borderColor: 'divider' }}
+      >
+        <Stack spacing={3} divider={<Divider />}>
+          {PAGE_ORDER.map((pageKey) => {
+            const page = CHECK_PAGES[pageKey]
+            const { items, total, done } = summarize(pageKey)
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0
+            const undone = items.filter((x) => !x.checked)
 
-          return (
-            <Paper
-              key={pageKey}
-              elevation={0}
-              sx={{ p: { xs: 3, sm: 4 }, border: '1px solid', borderColor: 'divider' }}
-            >
-              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-                {page.sectionTitle}
-              </Typography>
-
-              {total === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  （項目を準備中です）
+            return (
+              <Box key={pageKey}>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+                  {page.sectionTitle}
                 </Typography>
-              ) : (
-                <>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                    <Box sx={{ flex: 1 }}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={pct}
-                        sx={{ height: 8, borderRadius: 4 }}
-                      />
-                    </Box>
-                    <Typography variant="body2" fontWeight={700} sx={{ minWidth: 80, textAlign: 'right' }}>
-                      {done} / {total}（{pct}%）
-                    </Typography>
-                  </Box>
 
-                  {undone.length > 0 && (
-                    <>
-                      <Typography variant="body2" fontWeight={700} sx={{ mb: 1, color: '#d32f2f' }}>
-                        未対応の項目
+                {total === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    （項目を準備中です）
+                  </Typography>
+                ) : (
+                  <>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={pct}
+                          sx={{ height: 8, borderRadius: 4 }}
+                        />
+                      </Box>
+                      <Typography variant="body2" fontWeight={700} sx={{ minWidth: 80, textAlign: 'right' }}>
+                        {done} / {total}（{pct}%）
                       </Typography>
-                      <Stack divider={<Divider />}>
-                        {undone.map((it, i) => (
-                          <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, py: 1 }}>
-                            <CloseIcon sx={{ color: '#d32f2f', fontSize: 20, mt: '2px' }} />
-                            <Typography variant="body2">{it.text}</Typography>
-                          </Box>
-                        ))}
-                      </Stack>
-                    </>
-                  )}
-
-                  {undone.length === 0 && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CheckCircleIcon sx={{ color: 'success.main' }} />
-                      <Typography variant="body2">すべての項目に対応されています。</Typography>
                     </Box>
-                  )}
-                </>
-              )}
-            </Paper>
-          )
-        })}
-      </Stack>
+
+                    {undone.length > 0 && <UndoneList undone={undone} />}
+
+                    {undone.length === 0 && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CheckCircleIcon sx={{ color: 'success.main' }} />
+                        <Typography variant="body2">すべての項目に対応されています。</Typography>
+                      </Box>
+                    )}
+                  </>
+                )}
+              </Box>
+            )
+          })}
+        </Stack>
+      </Paper>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
         <CtaButton
@@ -456,5 +478,51 @@ export default function CheckListResult() {
         </Button>
       </Box>
     </Container>
+  )
+}
+
+// 未対応の項目：「未対応の項目を確認」クリックで開閉するドロップダウン表示
+function UndoneList({ undone }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Box>
+      <Box
+        onClick={() => setOpen((o) => !o)}
+        role="button"
+        aria-expanded={open}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: 'pointer',
+          color: '#d32f2f',
+          bgcolor: '#fdecea',
+          border: '1px solid',
+          borderColor: '#f5c6c2',
+          borderRadius: 1,
+          px: 1.5,
+          py: 1,
+          userSelect: 'none',
+          '&:hover': { bgcolor: '#fbe0dd' },
+        }}
+      >
+        <Typography variant="body2" fontWeight={700}>
+          未対応の項目を確認（{undone.length}件）
+        </Typography>
+        <ExpandMoreIcon
+          sx={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}
+        />
+      </Box>
+      <Collapse in={open}>
+        <Stack divider={<Divider />} sx={{ mt: 1 }}>
+          {undone.map((it, i) => (
+            <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, py: 1 }}>
+              <CloseIcon sx={{ color: '#d32f2f', fontSize: 20, mt: '2px' }} />
+              <Typography variant="body2">{it.text}</Typography>
+            </Box>
+          ))}
+        </Stack>
+      </Collapse>
+    </Box>
   )
 }

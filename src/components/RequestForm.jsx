@@ -319,7 +319,7 @@ export default function RequestForm({ onConfirm, initialData }) {
           <Typography variant="body2">
             <Box component="span" sx={{ fontWeight: 700 }}>● 写真差し替え・追加時のお願い</Box>
             <br />
-            写真の差し替え・追加をご希望の場合は、掲載許可をご確認いただいたうえで、お写真をご提供ください。なお、掲載可否の確認は事前にお客様自身でお願いいたします。
+            写真の差し替え・追加をご希望の場合は、<Box component="span" sx={{ color: '#d32f2f' }}>掲載許可をご確認いただいたうえで、お写真をご提供ください。</Box>なお、掲載可否の確認は事前にお客様自身でお願いいたします。
             <br />
             ※1GBを超えるファイルを添付したい場合は、こちらで添付せずに備考欄にその旨をご記載ください。別途、共有方法についてご案内いたします。
           </Typography>
@@ -383,7 +383,12 @@ export default function RequestForm({ onConfirm, initialData }) {
                       fullWidth
                       multiline
                       minRows={5}
-                      placeholder="例：園の紹介ページの一番下の写真を、添付した写真に差し替えたい"
+                      placeholder={
+                        '例：園の紹介ページの一番下の写真を、添付した写真に差し替えたい\n\n' +
+                        '※画像・参考資料など必要がありましたら添付資料に添付してください。\n' +
+                        '※画像が複数枚ある場合は、「＋修正内容を追加」ボタンより修正内容を追加し、それぞれの箇所へ添付いただくか、同ページ内なら複数添付も可能です。複数添付する場合は、HPのどこの画像か分かるように、変更内容欄への説明やデータのタイトルを変更するなど、分かる形でご共有ください。'
+                      }
+                      sx={{ '& textarea::placeholder': { fontSize: '0.75rem', opacity: 0.7 } }}
                     />
                     <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>
                       ※具体的にご記入ください。
@@ -404,12 +409,7 @@ export default function RequestForm({ onConfirm, initialData }) {
                     >
                       ファイルを選択
                     </Button>
-                    <Typography variant="caption" sx={{ display: 'block', mt: 1.5, mb: 1.5, color: 'text.primary' }}>
-                      ※画像・参考資料など必要がありましたら添付してください。
-                      <br />
-                      ※画像が複数枚ある場合は、「＋修正内容を追加」ボタンより修正内容を追加し、それぞれの箇所へ添付いただくか、同ページ内なら複数添付も可能です。
-                      複数添付する場合は、HPのどこの画像か分かるように、内容欄へのご説明やデータのタイトルを変更するなど、分かる形でご共有ください。
-                    </Typography>
+                    <Box sx={{ mb: 1.5 }} />
 
                     {fileErrors[idx] && (
                       <Typography variant="caption" sx={{ display: 'block', mb: 1.5, color: '#d32f2f', fontWeight: 700 }}>
@@ -475,7 +475,7 @@ export default function RequestForm({ onConfirm, initialData }) {
               }}
             />
           </LocalizationProvider>
-          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>
+          <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: 'text.primary' }}>
             ※ご希望がある場合のみご入力ください。ご希望がない場合は、受付日の翌営業日～5営業日程度を目安に更新いたします。
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>

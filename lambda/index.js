@@ -1,5 +1,6 @@
 require('dotenv').config()
 const saveKintone = require('./saveKintone')
+const saveKintoneResult = require('./saveKintoneResult')
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -18,6 +19,10 @@ exports.handler = async (event) => {
 
   if (path === '/saveKintone') {
     return saveKintone.handler(event)
+  }
+
+  if (path === '/saveKintoneResult') {
+    return saveKintoneResult.handler(event)
   }
 
   return {

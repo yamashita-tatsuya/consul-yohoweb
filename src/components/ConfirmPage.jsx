@@ -43,7 +43,7 @@ export default function ConfirmPage({ formData, onBack, onSubmitted }) {
           (formData.items || []).map(async (it) => ({
             siteUrl: it.siteUrl,
             description: it.description,
-            attachments:
+            files:
               it.files?.length > 0
                 ? await Promise.all(
                     it.files.map(async (f) => ({

@@ -1,3 +1,4 @@
+import { Box } from '@mui/material'
 import MonitorIcon from '@mui/icons-material/Monitor'
 import PlaceIcon from '@mui/icons-material/Place'
 import CampaignIcon from '@mui/icons-material/Campaign'
@@ -16,7 +17,14 @@ const PAGE_META = {
     icon: <CampaignIcon />,
     step: 3,
     route: '/web-check/sns',
-    nextLabel: '診断結果を確認する',
+    nextLabel: (
+      <>
+        診断結果を
+        {/* スマホ表示時のみ改行 */}
+        <Box component="br" sx={{ display: { xs: 'block', sm: 'none' } }} />
+        確認する
+      </>
+    ),
     nextVariant: 'orange',
   },
 }
