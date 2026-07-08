@@ -1,6 +1,15 @@
 const { KintoneRestAPIClient } = require('@kintone/rest-api-client')
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses')
 
 const APP_ID = 1881
+
+// 自動返信メールの送信元アドレス（SESで検証済み）
+const MAIL_FROM = process.env.MAIL_FROM || 'hiraguri-moe@yubisui.co.jp'
+
+// SESクライアント（リージョンはLambdaの実行リージョンを既定に）
+const sesClient = new SESClient({
+  region: process.env.SES_REGION || process.env.AWS_REGION || 'ap-northeast-1',
+})
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -54,6 +63,74 @@ async function createRequestNo(client) {
   }
 
   return `${yyyymmdd}${String(nextSeq).padStart(3, '0')}`
+}
+
+// 自動返信メールの本文を組み立てる
+function buildMailBody({ contactName, companyName, requestNo, items, desiredDate, note }) {
+  const lines = []
+  lines.push(`${companyName || ''}`)
+  lines.push(`${contactName || 'ご担当者'} 様`)
+  lines.push('')
+  lines.push('WEB修正依頼をお送りいただき、誠にありがとうございます。')
+  lines.push('以下の内容で受け付けいたしました。')
+  lines.push('')
+  lines.push(`依頼No：${requestNo}`)
+  lines.push('')
+  lines.push('──────────────────────')
+  lines.push('【ご依頼内容】')
+  ;(items || []).forEach((item, i) => {
+    lines.push('')
+    lines.push(`●修正内容${i + 1}`)
+    lines.push('')
+    lines.push('対象ページのURL：')
+    lines.push(`${item.siteUrl || ''}`)
+    lines.push('')
+    lines.push('修正箇所・変更内容：')
+    lines.push(`${item.description || ''}`)
+    const fileNames = (item.files || []).map((f) => f.name).filter(Boolean)
+    if (fileNames.length > 0) {
+      lines.push('')
+      lines.push('添付資料：')
+      lines.push(`${fileNames.join('、')}`)
+    }
+  })
+  if (desiredDate) {
+    lines.push('')
+    lines.push(`更新希望日：${desiredDate}`)
+  }
+  if (note) {
+    lines.push('')
+    lines.push('備考：')
+    lines.push(`${note}`)
+  }
+  lines.push('──────────────────────')
+  lines.push('')
+  lines.push('内容を確認の上、順次対応・連絡いたします。')
+  lines.push('※このメールは自動送信です。ご返信いただいても対応できませんのでご了承ください。')
+  lines.push('')
+  lines.push('株式会社ゆびすいコンサルティング')
+  return lines.join('\n')
+}
+
+// 依頼者へ自動返信メールを送信する（SES）
+async function sendConfirmationMail({ to, contactName, companyName, requestNo, items, desiredDate, note }) {
+  const command = new SendEmailCommand({
+    Source: MAIL_FROM,
+    Destination: { ToAddresses: [to] },
+    Message: {
+      Subject: {
+        Data: `【ゆびすい】WEB修正依頼を受け付けました（依頼No：${requestNo}）`,
+        Charset: 'UTF-8',
+      },
+      Body: {
+        Text: {
+          Data: buildMailBody({ contactName, companyName, requestNo, items, desiredDate, note }),
+          Charset: 'UTF-8',
+        },
+      },
+    },
+  })
+  await sesClient.send(command)
 }
 
 exports.handler = async (event) => {
@@ -122,6 +199,28 @@ exports.handler = async (event) => {
 
     console.info(`kintone record created: id=${id}, requestNo=${requestNo}`)
 
+    // 依頼者へ自動返信メールを送信（レコードは保存済みのため、メール失敗でも処理は成功扱い）
+    let mailSent = false
+    if (email) {
+      try {
+        await sendConfirmationMail({
+          to: email,
+          contactName,
+          companyName,
+          requestNo,
+          items,
+          desiredDate,
+          note,
+        })
+        mailSent = true
+        console.info(`confirmation mail sent to ${email}`)
+      } catch (mailErr) {
+        console.error('sendConfirmationMail error:', mailErr)
+      }
+    } else {
+      console.warn('email is empty; skip confirmation mail')
+    }
+
     return {
       statusCode: 200,
       headers: CORS_HEADERS,
@@ -129,6 +228,7 @@ exports.handler = async (event) => {
         success: true,
         recordId: id,
         requestNo,
+        mailSent,
       }),
     }
   } catch (e) {

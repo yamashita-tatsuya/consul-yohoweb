@@ -40,6 +40,8 @@ export default function CheckListResult() {
   const [dlErrors, setDlErrors] = useState({})
   const [dlLoading, setDlLoading] = useState(false)
   const [dlError, setDlError] = useState(null)
+  // 送信（メール・kintone登録）は初回成功時の一度きり。以降はボタンを「ダウンロード済み」で非活性化
+  const [submitted, setSubmitted] = useState(false)
 
   const handleDlChange = (e) => {
     const { name, value } = e.target
@@ -106,11 +108,16 @@ export default function CheckListResult() {
         companyName: pdfData.companyName,
         email: pdfData.email,
         score: overallPct,
+        date: pdfData.date,
+        advice,
         sections: PAGE_ORDER.map((pageKey) => ({
           title: CHECK_PAGES[pageKey].sectionTitle,
           items: summarize(pageKey).items.map((x) => ({ text: x.text, checked: x.checked })),
         })),
       })
+
+      // ダウンロード成功後は送信済みとして、以降のボタン操作を無効化する
+      setSubmitted(true)
     } catch (err) {
       console.error('PDF generation failed:', err)
       setDlError('PDFの生成に失敗しました。お手数ですが時間をおいて再度お試しください。')
@@ -408,11 +415,11 @@ export default function CheckListResult() {
           <CtaButton
             color="orange"
             onClick={handleDownload}
-            disabled={!dlForm.companyName.trim() || !dlForm.email.trim() || dlLoading}
+            disabled={!dlForm.companyName.trim() || !dlForm.email.trim() || dlLoading || submitted}
             startIcon={dlLoading ? <CircularProgress size={16} color="inherit" /> : null}
             sx={{ width: { xs: '100%', sm: 260 }, px: 0, py: 1.25, fontSize: '0.95rem' }}
           >
-            {dlLoading ? 'PDFを生成中...' : '→ ダウンロードする'}
+            {submitted ? 'ダウンロード済み' : dlLoading ? 'PDFを生成中...' : '→ ダウンロードする'}
           </CtaButton>
 
           {dlError && (
