@@ -4,7 +4,7 @@ const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses')
 const APP_ID = 1881
 
 // 自動返信メールの送信元アドレス（SESで検証済み）
-const MAIL_FROM = process.env.MAIL_FROM || 'hiraguri-moe@yubisui.co.jp'
+const MAIL_FROM = process.env.MAIL_FROM || 'hp-support@yubisui.co.jp'
 
 // SESクライアント（リージョンはLambdaの実行リージョンを既定に）
 const sesClient = new SESClient({

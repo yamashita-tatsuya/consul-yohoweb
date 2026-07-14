@@ -3,7 +3,8 @@ import { Document, Page, Text, View, Image, StyleSheet, Font, pdf } from '@react
 import QRCode from 'qrcode'
 
 // お問い合わせページ（QRコードのリンク先）
-const CONTACT_URL = 'https://yubisui.site/contact/'
+const CONTACT_URL =
+  'https://yubisui.site/contact/?utm_source=web-check&utm_medium=report_qr&utm_campaign=web-check_inquiry'
 
 // 日本語フォント（Noto Sans JP / 英数字も収録）を登録。
 // public/fonts 配下に同梱しており、PDF生成時にのみ読み込まれる。

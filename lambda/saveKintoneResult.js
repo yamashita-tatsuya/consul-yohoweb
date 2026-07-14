@@ -6,7 +6,7 @@ const APP_ID = 1884
 const GUEST_SPACE_ID = 72
 
 // 自動返信メールの送信元アドレス（SESで検証済み）
-const MAIL_FROM = process.env.MAIL_FROM || 'hiraguri-moe@yubisui.co.jp'
+const MAIL_FROM = process.env.MAIL_FROM || 'hp-support@yubisui.co.jp'
 
 // SESクライアント（リージョンはLambdaの実行リージョンを既定に）
 const sesClient = new SESClient({

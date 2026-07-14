@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Box, Container, Typography, Paper, Stack, Divider, LinearProgress, CircularProgress, Button, Collapse, TextField } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CloseIcon from '@mui/icons-material/Close'
@@ -42,6 +42,20 @@ export default function CheckListResult() {
   const [dlError, setDlError] = useState(null)
   // 送信（メール・kintone登録）は初回成功時の一度きり。以降はボタンを「ダウンロード済み」で非活性化
   const [submitted, setSubmitted] = useState(false)
+  // 「診断結果をダウンロード」押下時にスクロール移動する先（入力フォーム）
+  const downloadFormRef = useRef(null)
+
+  // ダウンロードフォームの開閉。開くときは展開アニメーション後にフォーム位置へスクロール
+  const handleToggleDownload = () => {
+    const willOpen = !downloadOpen
+    setDownloadOpen(willOpen)
+    if (willOpen) {
+      // Collapse の展開（既定300ms）を待ってからスクロール
+      setTimeout(() => {
+        downloadFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300)
+    }
+  }
 
   const handleDlChange = (e) => {
     const { name, value } = e.target
@@ -308,7 +322,7 @@ export default function CheckListResult() {
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
         <CtaButton
           color="orange"
-          onClick={() => setDownloadOpen((open) => !open)}
+          onClick={handleToggleDownload}
           sx={{ width: { xs: '100%', sm: 340 }, px: 0 }}
         >
           → 診断結果をダウンロード
@@ -320,6 +334,7 @@ export default function CheckListResult() {
 
       <Collapse in={downloadOpen}>
         <Paper
+          ref={downloadFormRef}
           elevation={0}
           sx={{
             p: { xs: 3, sm: 4 },
@@ -327,6 +342,7 @@ export default function CheckListResult() {
             border: '1px solid',
             borderColor: '#41a3a1',
             textAlign: 'center',
+            scrollMarginTop: 16,
           }}
         >
           <Typography variant="subtitle1" sx={{ fontWeight: 700, fontSize: '1.35rem', mb: 1 }}>
@@ -450,7 +466,7 @@ export default function CheckListResult() {
         <CtaButton
           color="blue"
           component="a"
-          href="https://yubisui.site/contact/"
+          href="https://yubisui.site/contact/?utm_source=web-check&utm_medium=result_button&utm_campaign=web-check_inquiry"
           target="_blank"
           rel="noopener noreferrer"
           sx={{ width: { xs: '100%', sm: 340 }, px: 0 }}

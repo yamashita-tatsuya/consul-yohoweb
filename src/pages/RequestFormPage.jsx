@@ -68,7 +68,7 @@ export default function RequestFormPage() {
           公開時にお渡ししているマニュアルをご確認のうえ、まずはお客様にてご対応をお願いいたします。{' '}
           <Box
             component="a"
-            href="/test_manual.pdf"
+            href="/manual.pdf"
             target="_blank"
             rel="noopener noreferrer"
             sx={{
@@ -80,7 +80,7 @@ export default function RequestFormPage() {
               '&:hover': { color: '#41a3a1' },
             }}
           >
-            →マニュアルはこちら（仮）
+            →マニュアルはこちら
           </Box>
           <br />
           ご不明な点がある場合や、その他の修正について、本フォームよりご依頼ください。
