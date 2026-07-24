@@ -239,7 +239,7 @@ export default function RequestForm({ onConfirm, initialData }) {
             helperText={errors.companyName}
             required
             fullWidth
-            placeholder="例：株式会社〇〇"
+            placeholder="例：学校法人〇〇・●●●園"
           />
           <TextField
             label="ご担当者様名"
@@ -477,11 +477,10 @@ export default function RequestForm({ onConfirm, initialData }) {
           </LocalizationProvider>
           <Typography variant="caption" sx={{ display: 'block', mt: 1.5, color: 'text.primary' }}>
             ※ご希望がある場合のみご入力ください。ご希望がない場合は、受付日の翌営業日～5営業日程度を目安に更新いたします。
-          </Typography>
-          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.primary' }}>
+            <br />
             ※希望日は本日より1週間以降の日付をご指定ください。大きな修正など、内容によってご希望に沿えない場合もありますのでご了承ください。
             <br />
-            ※土日、祝日、夏季休業、年末年始は対応できませんのでご了承ください。
+            ※受付時間 平日10:00～17:00（土日、祝日、夏季休業、年末年始は対応できませんのでご了承ください。）
           </Typography>
         </Box>
 

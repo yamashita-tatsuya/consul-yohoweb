@@ -34,8 +34,25 @@ export default function App() {
 
       <Box
         component="footer"
-        sx={{ py: 2, textAlign: 'center', borderTop: '1px solid', borderColor: 'divider' }}
+        sx={{
+          py: 3,
+          px: 2,
+          textAlign: 'center',
+          bgcolor: '#fff',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
       >
+        <Box sx={{ mb: 1.5 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.8 }}>
+            問い合わせ窓口：株式会社ゆびすいコンサルティング　ホームページサポート
+            <br />
+            <Box component="span" sx={{ wordBreak: 'break-all' }}>hp-support@yubisui.co.jp</Box>
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.8 }}>
+            受付時間：平日 10:00～17:00
+          </Typography>
+        </Box>
         <Typography variant="caption" color="text.secondary">
           © {new Date().getFullYear()} 株式会社ゆびすいコンサルティング
         </Typography>
