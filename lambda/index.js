@@ -1,6 +1,7 @@
 require('dotenv').config()
 const saveKintone = require('./saveKintone')
 const saveKintoneResult = require('./saveKintoneResult')
+const sendCompletionMail = require('./sendCompletionMail')
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -23,6 +24,11 @@ exports.handler = async (event) => {
 
   if (path === '/saveKintoneResult') {
     return saveKintoneResult.handler(event)
+  }
+
+  // 完了メール送信（DataSpider等から定期的に呼び出す想定。入力不要）
+  if (path === '/sendCompletionMail') {
+    return sendCompletionMail.handler(event)
   }
 
   return {

@@ -16,8 +16,15 @@ Font.register({
   ],
 })
 
-// 日本語は単語区切りがないため、ハイフネーションを無効化（1文字ずつ折り返す）
-Font.registerHyphenationCallback((word) => [word])
+// 折り返し制御：
+//  - 長いASCIIトークン（URL等）は任意位置で折り返せるよう1文字ずつに分割（QRへの重なり・見切れ防止）
+//  - それ以外（日本語など）はそのまま（不要なハイフネーションを避ける）
+Font.registerHyphenationCallback((word) => {
+  if (word.length > 20 && /^[\x00-\x7F]+$/.test(word)) {
+    return word.split('')
+  }
+  return [word]
+})
 
 const TEAL = '#41a3a1'
 const RED = '#d32f2f'

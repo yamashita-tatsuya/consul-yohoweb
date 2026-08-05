@@ -94,10 +94,8 @@ function buildMailBody({ contactName, companyName, requestNo, items, desiredDate
       lines.push(`${fileNames.join('、')}`)
     }
   })
-  if (desiredDate) {
-    lines.push('')
-    lines.push(`更新希望日：${desiredDate}`)
-  }
+  lines.push('')
+  lines.push(`更新希望日：${desiredDate || 'なし'}`)
   if (note) {
     lines.push('')
     lines.push('備考：')

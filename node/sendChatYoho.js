@@ -17,8 +17,6 @@ const path = require('path');
 const KINTONE_DOMAIN = 'https://yubisui.cybozu.com';
 const GUEST_SPACE_ID = 72; // ゲストスペースID（apps 1881 / 1884 が所属）
 
-// 送信先チャット（共通）: https://www.chatwork.com/#!rid384819858
-const CHATWORK_ROOM_ID = '384819858';
 // Chatwork APIトークン（環境変数があれば優先。なければ下の '' に直書きしてください）
 const CHATWORK_API_TOKEN = process.env.CHATWORK_TOKEN || '9d9621343ed56f2e187c9ca92e840b6f';
 
@@ -32,15 +30,17 @@ const MAX_PER_RUN = 100;
 const APP_CONFIG = {
   1881: {
     apiToken: process.env.KINTONE_TOKEN_1881 || 'I2qFELxceAYipOgecfEhJawBLXSp9bhIJepwzY2u',
+    roomId: '444137269', // 送信先チャット: https://www.chatwork.com/#!rid444137269
     companyField: '顧客名', // レコードから法人名を取り出すフィールドコード
     title: '★サイト修正依頼が作成されました★',
     lead: '新規のWEBサイト修正依頼が作成されました。下記より確認お願いします。',
     companyLabel: '顧客名',
-    // 顧客名の下に追加で表示する行（label：フィールド値）
-    extraLines: [{ label: '更新希望日', field: '更新希望日' }],
+    // 顧客名の下に追加で表示する行（label：フィールド値。空欄時は empty を表示）
+    extraLines: [{ label: '更新希望日', field: '更新希望日', empty: 'なし' }],
   },
   1884: {
     apiToken: process.env.KINTONE_TOKEN_1884 || 'PgqVZhe0bKEJ3PBM0xiQcQyqNwTOird3FoSqoUfp',
+    roomId: '384819858', // 送信先チャット: https://www.chatwork.com/#!rid384819858
     companyField: '法人名',
     title: '☆WEB診断結果が作成されました☆',
     lead: '新規のWEB診断結果が作成されました。下記より確認お願いします。',
@@ -127,7 +127,7 @@ function buildMessage(appId, cfg, record) {
   // アプリ固有の追加行（例：1881 は「更新希望日」）を顧客名の下に挿入
   let extra = '';
   for (const ex of cfg.extraLines || []) {
-    const val = record[ex.field]?.value || '';
+    const val = record[ex.field]?.value || ex.empty || '';
     extra += `${ex.label}：${val}\n`;
   }
 
@@ -174,8 +174,8 @@ async function processApp(appId, cfg, state) {
     const message = buildMessage(appId, cfg, record);
 
     try {
-      await sendToChatwork(CHATWORK_ROOM_ID, message);
-      writeLog(`✅ [${appId}] 送信成功 recordId=${recordId} ${cfg.companyLabel}:${companyName}`);
+      await sendToChatwork(cfg.roomId, message);
+      writeLog(`✅ [${appId}] 送信成功 roomId=${cfg.roomId} recordId=${recordId} ${cfg.companyLabel}:${companyName}`);
       // 成功した分だけ lastId を進めて保存（途中失敗時の取りこぼし防止）
       state[appId] = recordId;
       saveState(state);
