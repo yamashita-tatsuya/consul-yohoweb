@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, Container, Typography, Paper, Stack, Divider, LinearProgress, CircularProgress, Button, Collapse, TextField } from '@mui/material'
+import { Box, Container, Typography, Paper, Stack, Divider, CircularProgress, Button, Collapse, TextField } from '@mui/material'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CloseIcon from '@mui/icons-material/Close'
 import ReplayIcon from '@mui/icons-material/Replay'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import StarIcon from '@mui/icons-material/Star'
+import StarBorderIcon from '@mui/icons-material/StarBorder'
 import { Link as RouterLink } from 'react-router-dom'
 import { useCheckList } from '../contexts/CheckListContext'
 import { CHECK_PAGES, PAGE_ORDER } from '../data/checkListData'
+import { levelForPct, starsForPct, LEVEL_COLORS, OVERALL_ADVICE, fieldCommentFor, overallPatternComment } from '../data/diagnosisComments'
 import { PRIVACY_POLICY_INTRO, PRIVACY_POLICY_SECTIONS } from '../data/privacyPolicy'
 import { PageHeader, CtaButton } from '../components/render'
 import { isValidEmail } from '../utils/validation'
@@ -87,6 +90,7 @@ export default function CheckListResult() {
         date: new Date().toLocaleDateString('ja-JP'),
         overall: { done: overall.done, total: overall.total, pct: overallPct, color: overallColor },
         advice,
+        patternComment,
         pages: PAGE_ORDER.map((pageKey) => {
           const page = CHECK_PAGES[pageKey]
           const { items, total, done } = summarize(pageKey)
@@ -96,6 +100,7 @@ export default function CheckListResult() {
             done,
             total,
             pct,
+            comment: fieldCommentFor(pageKey, pct, total > 0),
             undone: items.filter((x) => !x.checked).map((x) => x.text),
           }
         }),
@@ -159,13 +164,6 @@ export default function CheckListResult() {
     return { items, total, done }
   }
 
-  // パーセンテージに応じた色（30%以下:赤 / 70%以下:オレンジ / 70%超:緑）
-  const colorForPct = (pct) => {
-    if (pct <= 30) return '#d32f2f'
-    if (pct <= 70) return '#f7894b'
-    return '#2e9e5b'
-  }
-
   // 全ページ合計の総合結果
   const overall = PAGE_ORDER.reduce(
     (acc, pageKey) => {
@@ -177,31 +175,21 @@ export default function CheckListResult() {
     { total: 0, done: 0 }
   )
   const overallPct = overall.total > 0 ? Math.round((overall.done / overall.total) * 100) : 0
-  const overallColor = colorForPct(overallPct)
 
-  // パーセンテージに応じた総合コメント（99%以下と100%は共に緑）
-  const adviceForPct = (pct) => {
-    if (pct <= 30)
-      return {
-        title: '早めの見直しを推奨します',
-        body: '秋の募集前に、WEBサイト・Googleマップ・SNSの優先改修をおすすめします。',
-      }
-    if (pct <= 70)
-      return {
-        title: '一部見直しが必要です',
-        body: '改善余地のある項目を優先的に対応することで、募集の強化につながります。',
-      }
-    if (pct <= 99)
-      return {
-        title: '概ね整っています',
-        body: '秋の募集に向けた基盤は良好です。細部をさらに磨きましょう。',
-      }
-    return {
-      title: 'WEB集客は完璧です',
-      body: '秋の募集に向けた基盤は良好です。細部をさらに磨きましょう。',
-    }
-  }
-  const advice = adviceForPct(overallPct)
+  // 5段階評価の各表示要素（レベル・色・★の数・総合コメント）は data/diagnosisComments に集約
+  const overallLevel = levelForPct(overallPct)
+  const overallColor = LEVEL_COLORS[overallLevel]
+  const advice = OVERALL_ADVICE[overallLevel]
+
+  // 3分野の達成率から総合パターンの追加コメントを判定（total.body に続けて表示）
+  // いずれかの分野が0項目のときは判定不能として追加コメントは出さない
+  const sectionPcts = PAGE_ORDER.map((pageKey) => {
+    const { total, done } = summarize(pageKey)
+    return total > 0 ? Math.round((done / total) * 100) : null
+  })
+  const patternComment = sectionPcts.every((p) => p !== null)
+    ? overallPatternComment(sectionPcts)
+    : ''
 
   return (
     <Container maxWidth="md" sx={{ py: 5, flex: 1 }}>
@@ -248,8 +236,8 @@ export default function CheckListResult() {
             <Typography variant="h3" fontWeight={700} sx={{ color: overallColor, lineHeight: 1 }}>
               {overallPct}%
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {overall.done} / {overall.total} 項目
+            <Typography color="text.secondary" sx={{ mt: 0.5, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+              （{overall.done} / {overall.total} 項目）
             </Typography>
           </Box>
         </Box>
@@ -260,10 +248,16 @@ export default function CheckListResult() {
         sx={{ p: { xs: 2, sm: 2.5 }, mb: 3, border: '1px solid', borderColor: 'divider', textAlign: 'center' }}
       >
         <Typography variant="subtitle1" sx={{ color: overallColor, fontWeight: 700, fontSize: '1.35rem', mb: 0.25 }}>
-          {advice.title}
+          【{advice.title}】
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {advice.body}
+          {patternComment && (
+            <>
+              <br />
+              {patternComment}
+            </>
+          )}
         </Typography>
       </Paper>
 
@@ -290,18 +284,28 @@ export default function CheckListResult() {
                   </Typography>
                 ) : (
                   <>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                      <Box sx={{ flex: 1 }}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={pct}
-                          sx={{ height: 8, borderRadius: 4 }}
-                        />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                      <Box
+                        role="img"
+                        aria-label={`5段階評価 ${starsForPct(pct)} / 5`}
+                        sx={{ display: 'flex', gap: 0.25 }}
+                      >
+                        {[1, 2, 3, 4, 5].map((n) =>
+                          n <= starsForPct(pct) ? (
+                            <StarIcon key={n} sx={{ fontSize: 22, color: 'grey.700' }} />
+                          ) : (
+                            <StarBorderIcon key={n} sx={{ fontSize: 22, color: 'grey.400' }} />
+                          )
+                        )}
                       </Box>
-                      <Typography variant="body2" fontWeight={700} sx={{ minWidth: 80, textAlign: 'right' }}>
+                      <Typography variant="body2" fontWeight={700} sx={{ minWidth: 80, textAlign: 'right', ml: 'auto' }}>
                         {done} / {total}（{pct}%）
                       </Typography>
                     </Box>
+
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {fieldCommentFor(pageKey, pct)}
+                    </Typography>
 
                     {undone.length > 0 && <UndoneList undone={undone} />}
 

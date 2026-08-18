@@ -77,10 +77,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
-  undoneLabel: { color: RED, fontWeight: 'bold', marginBottom: 3 },
+  fieldComment: { marginBottom: 6 },
+  undoneLabel: { fontSize: 9, color: RED, fontWeight: 'bold', marginBottom: 3 },
   undoneRow: { flexDirection: 'row', marginBottom: 2 },
-  undoneMark: { width: 12, color: RED },
-  undoneText: { flex: 1 },
+  undoneMark: { fontSize: 9, width: 12, color: RED },
+  undoneText: { fontSize: 9, flex: 1 },
   doneText: { color: GREEN },
   contactBox: {
     border: `1pt solid ${TEAL}`,
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
 })
 
 function ResultDocument({ data }) {
-  const { companyName, email, date, overall, advice, pages, qrDataUrl } = data
+  const { companyName, email, date, overall, advice, patternComment, pages, qrDataUrl } = data
   return (
     <Document title="園のWEB活用診断結果" author="株式会社ゆびすいコンサルティング">
       <Page size="A4" style={styles.page}>
@@ -129,8 +130,11 @@ function ResultDocument({ data }) {
           <Text style={styles.overallScore}>
             総合スコア {overall.done} / {overall.total} 項目（{overall.pct}%）
           </Text>
-          <Text style={[styles.adviceTitle, { color: overall.color }]}>{advice.title}</Text>
-          <Text style={styles.adviceBody}>{advice.body}</Text>
+          <Text style={[styles.adviceTitle, { color: overall.color }]}>【{advice.title}】</Text>
+          <Text style={styles.adviceBody}>
+            {advice.body}
+            {patternComment ? `\n${patternComment}` : ''}
+          </Text>
         </View>
 
         {pages.map((p, i) => (
@@ -146,18 +150,23 @@ function ResultDocument({ data }) {
             <View style={styles.sectionBody}>
               {p.total === 0 ? (
                 <Text style={{ color: GREY }}>（項目を準備中です）</Text>
-              ) : p.undone.length > 0 ? (
-                <>
-                  <Text style={styles.undoneLabel}>未対応の項目</Text>
-                  {p.undone.map((text, j) => (
-                    <View key={j} style={styles.undoneRow}>
-                      <Text style={styles.undoneMark}>×</Text>
-                      <Text style={styles.undoneText}>{text}</Text>
-                    </View>
-                  ))}
-                </>
               ) : (
-                <Text style={styles.doneText}>すべての項目に対応されています。</Text>
+                <>
+                  {p.comment && <Text style={styles.fieldComment}>{p.comment}</Text>}
+                  {p.undone.length > 0 ? (
+                    <>
+                      <Text style={styles.undoneLabel}>未対応の項目</Text>
+                      {p.undone.map((text, j) => (
+                        <View key={j} style={styles.undoneRow}>
+                          <Text style={styles.undoneMark}>×</Text>
+                          <Text style={styles.undoneText}>{text}</Text>
+                        </View>
+                      ))}
+                    </>
+                  ) : (
+                    <Text style={styles.doneText}>すべての項目に対応されています。</Text>
+                  )}
+                </>
               )}
             </View>
           </View>
