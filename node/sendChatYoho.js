@@ -37,6 +37,20 @@ const APP_CONFIG = {
     companyLabel: '顧客名',
     // 顧客名の下に追加で表示する行（label：フィールド値。空欄時は empty を表示）
     extraLines: [{ label: '更新希望日', field: '更新希望日', empty: 'なし' }],
+    // ステータスが特定値に変わったときの通知（本文は buildStatusMessage 参照）
+    statusNotify: {
+      status: 'ゆびすい確認中', // プロセス管理のステータス値
+      // ステータス変更のたびにkintone側で更新される日時フィールド（再入検知の起点）
+      requestedAtField: '確認依頼日時',
+      title: '☆サイト修正作業が完了しました☆',
+      lead: 'WEBサイト修正が完了しました。下記より確認し、ステータスを「完了」にしてください。',
+      // 表示する行（label：フィールド値。date:true は YYYY-MM-DD に整形、empty は空欄時の表示）
+      lines: [
+        { label: '顧客名', field: '顧客名' },
+        { label: '更新希望日', field: '更新希望日', empty: 'なし' },
+        { label: '作業完了日', field: '作業完了日', date: true },
+      ],
+    },
   },
   1884: {
     apiToken: process.env.KINTONE_TOKEN_1884 || 'PgqVZhe0bKEJ3PBM0xiQcQyqNwTOird3FoSqoUfp',
@@ -104,6 +118,19 @@ async function getNewRecords(appId, apiToken, lastId) {
   return res.data.records;
 }
 
+// kintone（ゲストスペース）: 指定ステータスのレコードを取得
+async function getRecordsByStatus(appId, apiToken, status) {
+  const res = await axios.get(`${KINTONE_DOMAIN}/k/guest/${GUEST_SPACE_ID}/v1/records.json`, {
+    headers: { 'X-Cybozu-API-Token': apiToken },
+    params: {
+      app: appId,
+      // プロセス管理のステータスは既定のフィールドコード「ステータス」で絞り込み
+      query: `ステータス in ("${status}") order by $id asc limit ${MAX_PER_RUN}`,
+    },
+  })
+  return res.data.records
+}
+
 // Chatworkの指定ルームへメッセージ送信
 async function sendToChatwork(roomId, message) {
   await axios.post(
@@ -139,6 +166,86 @@ function buildMessage(appId, cfg, record) {
     `${recordUrl}\n` +
     '[/info]'
   );
+}
+
+// ステータス変更通知のメッセージを組み立て
+function buildStatusMessage(appId, notify, record) {
+  const recordId = Number(record.$id.value)
+  const recordUrl = `${KINTONE_DOMAIN}/k/guest/${GUEST_SPACE_ID}/${appId}/show#record=${recordId}`
+
+  let body = ''
+  for (const f of notify.lines) {
+    let val = record[f.field]?.value || ''
+    if (f.date && val) val = String(val).slice(0, 10) // 日時→YYYY-MM-DD に整形（更新希望日と表記を揃える）
+    if (!val) val = f.empty || ''
+    body += `${f.label}：${val}\n`
+  }
+
+  return `[info][title]${notify.title}[/title]${notify.lead}\n${body}${recordUrl}\n[/info]`
+}
+
+// ステータスが指定値に「新たに変わった」レコードを通知。
+// 再入も検知できるよう、kintoneの「確認依頼日時（requestedAtField）」が
+// 前回通知時と変わっているレコードを対象にする（state に {recordId: 最後に通知した確認依頼日時} を保持）。
+async function processStatusNotify(appId, cfg, state) {
+  const notify = cfg.statusNotify
+  if (!notify) return
+
+  const records = await getRecordsByStatus(appId, cfg.apiToken, notify.status)
+  const key = `${appId}_status_${notify.status}`
+  const field = notify.requestedAtField
+
+  const prev = state[key]
+
+  // 初回（未記録 or 旧形式の配列）は、現在値を基準として記録するだけ（既存分は通知しない）
+  if (!prev || typeof prev !== 'object' || Array.isArray(prev)) {
+    const baseline = {}
+    records.forEach((r) => {
+      baseline[String(r.$id.value)] = r[field]?.value || ''
+    })
+    state[key] = baseline
+    saveState(state)
+    writeLog(`ℹ️ [${appId}] 「${notify.status}」初回基準を設定（${records.length}件）。既存分は通知しません。`)
+    return
+  }
+
+  const map = prev
+  // 「確認依頼日時」が state と異なる（＝新規 or 再入）レコードを抽出
+  const fresh = records.filter((r) => {
+    const id = String(r.$id.value)
+    const ts = r[field]?.value || ''
+    return map[id] !== ts
+  })
+
+  if (fresh.length === 0) {
+    writeLog(`… [${appId}] 「${notify.status}」新たな該当なし`)
+    return
+  }
+
+  writeLog(`📦 [${appId}] 「${notify.status}」に新たに変更 ${fresh.length} 件`)
+
+  for (let i = 0; i < fresh.length; i++) {
+    const record = fresh[i]
+    const id = String(record.$id.value)
+    const ts = record[field]?.value || ''
+    const message = buildStatusMessage(appId, notify, record)
+
+    try {
+      await sendToChatwork(cfg.roomId, message)
+      writeLog(`✅ [${appId}] 「${notify.status}」通知成功 roomId=${cfg.roomId} recordId=${id}`)
+      map[id] = ts // 通知した確認依頼日時を記録（次回はこれと変われば再通知）
+      state[key] = map
+      saveState(state)
+    } catch (err) {
+      writeLog(`❌ [${appId}] 「${notify.status}」通知失敗 recordId=${id} エラー:${err.response?.data ? JSON.stringify(err.response.data) : err.message}`)
+      writeLog(`↩️ [${appId}] recordId=${id} 以降は次回実行で再試行します`)
+      return
+    }
+
+    if (i < fresh.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, SEND_INTERVAL_MS))
+    }
+  }
 }
 
 // 1アプリ分の処理（新規レコードを通知し、state を更新）
@@ -204,7 +311,10 @@ async function main() {
 
   for (const appId of Object.keys(APP_CONFIG)) {
     try {
+      // ① 新規レコードの通知
       await processApp(appId, APP_CONFIG[appId], state);
+      // ② 特定ステータスへの変更通知（statusNotify 設定があるアプリのみ）
+      await processStatusNotify(appId, APP_CONFIG[appId], state);
     } catch (err) {
       writeLog(`❌ [${appId}] 処理中エラー:${err.response?.data ? JSON.stringify(err.response.data) : err.message}`);
     }

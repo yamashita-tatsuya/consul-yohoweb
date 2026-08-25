@@ -104,9 +104,16 @@ function buildMailBody({ contactName, companyName, requestNo, items, desiredDate
   lines.push('──────────────────────')
   lines.push('')
   lines.push('内容を確認の上、順次対応・連絡いたします。')
-  lines.push('※このメールは自動送信です。ご返信いただいても対応できませんのでご了承ください。')
   lines.push('')
+  lines.push('----------------------------------------')
   lines.push('株式会社ゆびすいコンサルティング')
+  lines.push('デジタル集客支援 ホームページサポート')
+  lines.push('hp-support@yubisui.co.jp')
+  lines.push('受付時間：10：00～17：00')
+  lines.push('（土日・祝日・年末年始・夏季休業を除く）')
+  lines.push('')
+  lines.push('※お問い合わせの際は、【依頼No.】 のご共有をお願いいたします。')
+  lines.push('----------------------------------------')
   return lines.join('\n')
 }
 
