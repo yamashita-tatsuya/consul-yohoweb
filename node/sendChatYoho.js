@@ -181,7 +181,7 @@ function buildStatusMessage(appId, notify, record) {
     body += `${f.label}：${val}\n`
   }
 
-  return `[info][title]${notify.title}[/title]${notify.lead}\n${body}${recordUrl}\n[/info]`
+  return `[toall]\n[info][title]${notify.title}[/title]${notify.lead}\n${body}${recordUrl}\n[/info]`
 }
 
 // ステータスが指定値に「新たに変わった」レコードを通知。
