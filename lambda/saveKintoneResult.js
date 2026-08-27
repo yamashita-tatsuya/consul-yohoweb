@@ -73,13 +73,14 @@ function buildResultMailBody({ companyName, date, score, advice, details }) {
   lines.push('WEB運営の改善のお困りごとは、ゆびすいまでお気軽にご相談ください。')
   lines.push('https://yubisui.site/contact/')
   lines.push('')
-  lines.push('----------------------------------------')
+  lines.push('※本メールは自動送信メールとなります。')
+  lines.push('------------------------------------------------------------')
   lines.push('株式会社ゆびすいコンサルティング')
   lines.push('デジタル集客支援 ホームページサポート')
   lines.push('hp-support@yubisui.co.jp')
   lines.push('受付時間：10：00～17：00')
   lines.push('（土日・祝日・年末年始・夏季休業を除く）')
-  lines.push('----------------------------------------')
+  lines.push('------------------------------------------------------------')
   return lines.join('\n')
 }
 

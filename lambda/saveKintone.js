@@ -1,14 +1,23 @@
 const { KintoneRestAPIClient } = require('@kintone/rest-api-client')
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses')
+const { S3Client, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 
 const APP_ID = 1881
 
 // 自動返信メールの送信元アドレス（SESで検証済み）
 const MAIL_FROM = process.env.MAIL_FROM || 'hp-support@yubisui.co.jp'
 
+// 添付ファイルの一時アップロード先S3バケット
+const UPLOAD_BUCKET = process.env.UPLOAD_BUCKET
+
 // SESクライアント（リージョンはLambdaの実行リージョンを既定に）
 const sesClient = new SESClient({
   region: process.env.SES_REGION || process.env.AWS_REGION || 'ap-northeast-1',
+})
+
+// S3クライアント（署名付きURLでアップロードされた添付ファイルの取得・削除に使用）
+const s3Client = new S3Client({
+  region: process.env.S3_REGION || process.env.AWS_REGION || 'ap-northeast-1',
 })
 
 const CORS_HEADERS = {
@@ -18,8 +27,21 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+// S3から添付ファイルを取得してkintoneへアップロードし、fileKeyを返す。
+// （旧方式の Base64 `data` が来た場合も後方互換で処理する）
 async function uploadFile(client, file) {
-  const buffer = Buffer.from(file.data, 'base64')
+  let buffer
+  if (file.key) {
+    const obj = await s3Client.send(
+      new GetObjectCommand({ Bucket: UPLOAD_BUCKET, Key: file.key })
+    )
+    buffer = Buffer.from(await obj.Body.transformToByteArray())
+  } else if (file.data) {
+    buffer = Buffer.from(file.data, 'base64')
+  } else {
+    throw new Error(`添付ファイルのデータがありません（${file.name || 'unknown'}）`)
+  }
+
   const { fileKey } = await client.file.uploadFile({
     file: {
       name: file.name,
@@ -28,6 +50,16 @@ async function uploadFile(client, file) {
     },
   })
   return { fileKey }
+}
+
+// S3上の一時ファイルを削除（ベストエフォート・失敗しても処理は継続）
+async function deleteS3File(file) {
+  if (!file.key || !UPLOAD_BUCKET) return
+  try {
+    await s3Client.send(new DeleteObjectCommand({ Bucket: UPLOAD_BUCKET, Key: file.key }))
+  } catch (e) {
+    console.error(`S3一時ファイル削除失敗（${file.key}）:`, e)
+  }
 }
 
 // 依頼No採番：YYYYMMDD001 ～ YYYYMMDD999
@@ -105,7 +137,8 @@ function buildMailBody({ contactName, companyName, requestNo, items, desiredDate
   lines.push('')
   lines.push('内容を確認の上、順次対応・連絡いたします。')
   lines.push('')
-  lines.push('----------------------------------------')
+  lines.push('※本メールは自動送信メールとなります。')
+  lines.push('------------------------------------------------------------')
   lines.push('株式会社ゆびすいコンサルティング')
   lines.push('デジタル集客支援 ホームページサポート')
   lines.push('hp-support@yubisui.co.jp')
@@ -113,7 +146,7 @@ function buildMailBody({ contactName, companyName, requestNo, items, desiredDate
   lines.push('（土日・祝日・年末年始・夏季休業を除く）')
   lines.push('')
   lines.push('※お問い合わせの際は、【依頼No.】 のご共有をお願いいたします。')
-  lines.push('----------------------------------------')
+  lines.push('------------------------------------------------------------')
   return lines.join('\n')
 }
 
@@ -203,6 +236,9 @@ exports.handler = async (event) => {
     })
 
     console.info(`kintone record created: id=${id}, requestNo=${requestNo}`)
+
+    // kintoneへ登録済みのため、S3上の一時ファイルを削除（ベストエフォート）
+    await Promise.all((items || []).flatMap((item) => (item.files || []).map((f) => deleteS3File(f))))
 
     // 依頼者へ自動返信メールを送信（レコードは保存済みのため、メール失敗でも処理は成功扱い）
     let mailSent = false

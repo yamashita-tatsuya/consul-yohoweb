@@ -45,7 +45,7 @@ export default function App() {
       >
         <Box sx={{ mb: 1.5 }}>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.8 }}>
-            問い合わせ窓口：株式会社ゆびすいコンサルティング　ホームページサポート
+            問い合わせ窓口：株式会社ゆびすいコンサルティング　デジタル集客支援 ホームページサポート
             <br />
             <Box component="span" sx={{ wordBreak: 'break-all' }}>hp-support@yubisui.co.jp</Box>
           </Typography>

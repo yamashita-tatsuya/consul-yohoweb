@@ -15,13 +15,37 @@ import { PrimaryButton } from './render'
 
 const ITEM_NUMS = ['①', '②', '③', '④', '⑤']
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result.split(',')[1])
-    reader.onerror = reject
+// 署名付きURLを取得し、ファイルをS3へ直接アップロードして、S3キー等を返す
+async function uploadFileToS3(file) {
+  const uploadEndpoint = import.meta.env.VITE_UPLOAD_API_ENDPOINT
+  if (!uploadEndpoint) {
+    throw new Error('アップロード用APIエンドポイントが設定されていません（.env を確認してください）')
+  }
+
+  // 1. 署名付きPUT URLを取得
+  const res = await fetch(uploadEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: file.name, type: file.type }),
   })
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`アップロードURL取得エラー (${res.status})${body ? ': ' + body : ''}`)
+  }
+  const { uploadUrl, key } = await res.json()
+
+  // 2. S3へ直接PUT（Lambdaを経由しないため6MB制限を受けない）
+  const putRes = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: file.type ? { 'Content-Type': file.type } : undefined,
+    body: file,
+  })
+  if (!putRes.ok) {
+    throw new Error(`ファイルのアップロードに失敗しました（${file.name}）`)
+  }
+
+  // 3. saveKintone へは Base64 ではなく S3キーを渡す
+  return { name: file.name, type: file.type, key }
 }
 
 export default function ConfirmPage({ formData, onBack, onSubmitted }) {
@@ -45,13 +69,7 @@ export default function ConfirmPage({ formData, onBack, onSubmitted }) {
             description: it.description,
             files:
               it.files?.length > 0
-                ? await Promise.all(
-                    it.files.map(async (f) => ({
-                      name: f.name,
-                      type: f.type,
-                      data: await fileToBase64(f),
-                    }))
-                  )
+                ? await Promise.all(it.files.map((f) => uploadFileToS3(f)))
                 : [],
           }))
         ),
@@ -73,7 +91,11 @@ export default function ConfirmPage({ formData, onBack, onSubmitted }) {
 
       onSubmitted(formData)
     } catch (err) {
-      setApiError(err.message || '送信に失敗しました。しばらくたってから再試行してください。')
+      // 原因の詳細は開発者向けにコンソールへ、画面には定型の案内文を表示
+      console.error('送信失敗:', err)
+      setApiError(
+        '送信に失敗しました。通信環境をご確認のうえ、時間をおいて再度お試しください。解決しない場合はお手数ですが hp-support@yubisui.co.jp までご連絡ください。'
+      )
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setLoading(false)

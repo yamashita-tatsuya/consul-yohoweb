@@ -2,6 +2,7 @@ require('dotenv').config()
 const saveKintone = require('./saveKintone')
 const saveKintoneResult = require('./saveKintoneResult')
 const sendCompletionMail = require('./sendCompletionMail')
+const createUploadUrl = require('./createUploadUrl')
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -17,6 +18,11 @@ exports.handler = async (event) => {
   }
 
   const path = event.rawPath || '/'
+
+  // 添付ファイルのS3アップロード用の署名付きURLを発行
+  if (path === '/createUploadUrl') {
+    return createUploadUrl.handler(event)
+  }
 
   if (path === '/saveKintone') {
     return saveKintone.handler(event)

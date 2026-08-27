@@ -418,18 +418,28 @@ export default function RequestForm({ onConfirm, initialData }) {
                     )}
 
                     {item.files.length > 0 && (
-                      <Stack direction="row" flexWrap="wrap" gap={1}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 1,
+                          width: '100%',
+                          minWidth: 0,
+                        }}
+                      >
                         {item.files.map((f, fi) => (
                           <Chip
                             key={fi}
                             label={f.name}
+                            title={f.name}
                             size="small"
                             onDelete={() => handleFileRemove(idx, fi)}
                             deleteIcon={<Close />}
                             variant="outlined"
+                            sx={{ maxWidth: '100%' }}
                           />
                         ))}
-                      </Stack>
+                      </Box>
                     )}
                   </Box>
                 </Stack>

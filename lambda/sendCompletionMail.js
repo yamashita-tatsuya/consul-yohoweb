@@ -65,7 +65,8 @@ function buildMailBody({ contactName, companyName, requestNo, items, desiredDate
   lines.push('新規の修正依頼はこちらからご連絡ください。')
   lines.push('https://consul-web.yubisui-portal.net/update-request')
   lines.push('')
-  lines.push('----------------------------------------')
+  lines.push('※本メールは自動送信メールとなります。')
+  lines.push('------------------------------------------------------------')
   lines.push('株式会社ゆびすいコンサルティング')
   lines.push('デジタル集客支援 ホームページサポート')
   lines.push('hp-support@yubisui.co.jp')
@@ -73,7 +74,7 @@ function buildMailBody({ contactName, companyName, requestNo, items, desiredDate
   lines.push('（土日・祝日・年末年始・夏季休業を除く）')
   lines.push('')
   lines.push('※お問い合わせの際は、【依頼No.】 のご共有をお願いいたします。')
-  lines.push('----------------------------------------')
+  lines.push('------------------------------------------------------------')
   return lines.join('\n')
 }
 
