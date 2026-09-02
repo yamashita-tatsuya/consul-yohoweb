@@ -15,8 +15,14 @@ export default function SuccessPage({ formData, onReset }) {
         </Typography>
         <Typography color="text.secondary">
           {formData.contactName} 様、ご依頼ありがとうございます。
+          ご依頼内容の確認メールを自動送信いたしました。
           <br />
-          内容を確認の上、担当者よりご連絡いたします。
+          確認事項がある場合は、担当者よりご連絡いたします。
+          <br />
+          作業完了後は、完了のお知らせをメールにてお送りいたします。
+          <br />
+          <br />
+          なお、確認事項がある場合は、確認・調整にお時間を要するため、ご希望の更新日に間に合わない場合がございます。あらかじめご了承ください。
         </Typography>
       </Box>
 
